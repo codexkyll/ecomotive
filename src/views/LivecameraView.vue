@@ -18,7 +18,7 @@
         <div class="left-column">
           
           <!-- 1. Camera Feed Container -->
-          <div ref="videoWrapperRef" class="video-wrapper">
+          <div ref="videoWrapperRef" class="video-wrapper" :class="{ 'force-fullscreen': isFullscreen }">
             
             <!-- A. Camera OFF/Idle Overlay -->
             <div v-if="!isStreaming" class="camera-off-overlay">
@@ -38,7 +38,7 @@
               <span>Analyzing...</span>
             </div>
             
-            <!-- C. EXIT FULLSCREEN BUTTON (Middle Center Bottom - Only visible in Fullscreen) -->
+            <!-- C. EXIT FULLSCREEN BUTTON -->
             <button v-if="isFullscreen" @click="toggleFullscreen" class="exit-fullscreen-overlay-btn" title="Exit Fullscreen">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -46,10 +46,23 @@
             </button>
             
             <!-- D. Live Video Element -->
-            <video ref="videoRef" autoplay playsinline muted class="live-video" :class="{ 'hidden': !isStreaming }"></video>
+            <!-- FIX: Added 'mirrored' class strictly for Front Camera -->
+            <video 
+              ref="videoRef" 
+              autoplay 
+              playsinline 
+              muted 
+              class="live-video" 
+              :class="{ 'hidden': !isStreaming, 'mirrored': facingMode === 'user' }"
+            ></video>
             
             <!-- E. Canvas for Bounding Boxes -->
-            <canvas ref="canvasRef" class="detection-canvas"></canvas>
+            <!-- FIX: Mirror the canvas via CSS to match video if in selfie mode -->
+            <canvas 
+              ref="canvasRef" 
+              class="detection-canvas"
+              :class="{ 'mirrored': facingMode === 'user' }"
+            ></canvas>
           </div>
 
           <!-- 2. Controls -->
@@ -209,7 +222,7 @@ const currentFPS = ref(0);
 const isProcessing = ref(false);
 const showAuthModal = ref(false); 
 const isFullscreen = ref(false);
-const facingMode = ref('environment'); // 'environment' (back) or 'user' (front)
+const facingMode = ref('environment'); // default to back camera
 const isMobileDevice = ref(false);
 
 // Internal variables
@@ -238,10 +251,16 @@ onUnmounted(() => {
 });
 
 const handleFullscreenChange = () => {
-  isFullscreen.value = !!document.fullscreenElement;
+  if (document.fullscreenElement || document.webkitFullscreenElement) {
+    isFullscreen.value = true;
+  } else {
+    // Only turn off if we were depending on native fullscreen
+    if (!isFullscreen.value) return; 
+    isFullscreen.value = false;
+  }
 };
 
-// --- Auth Navigation Handlers (FIXED) ---
+// --- Auth Navigation ---
 const closeAuthModal = () => {
   showAuthModal.value = false;
 };
@@ -257,7 +276,6 @@ const goToSignup = () => {
 };
 
 // --- Camera Methods ---
-
 const startCamera = async () => {
   const token = localStorage.getItem('userToken');
   if (!token) {
@@ -268,6 +286,7 @@ const startCamera = async () => {
   try {
     statusText.value = 'Initializing...';
     
+    // Mobile: Portrait (720w x 1280h). Desktop: Landscape (1280w x 720h).
     const constraints = isMobileDevice.value 
       ? { 
           facingMode: facingMode.value, 
@@ -294,15 +313,11 @@ const startCamera = async () => {
     }
   } catch (error) {
     console.error("Error accessing webcam:", error);
-    
-    // Fallback logic
     if (error.name === "OverconstrainedError" && facingMode.value === 'environment') {
-        console.log("Environment camera failed, attempting 'user' (front) camera fallback.");
         facingMode.value = 'user'; 
         startCamera(); 
         return;
     }
-
     alert("Could not access camera. Please allow permissions. Error: " + error.name);
     statusText.value = 'Error';
   }
@@ -341,25 +356,33 @@ const flipCamera = () => {
   startCamera(); 
 };
 
-const toggleFullscreen = () => {
+const toggleFullscreen = async () => {
   const wrapper = videoWrapperRef.value;
   
-  if (!document.fullscreenElement) {
-    // Enter Fullscreen
-    if (wrapper.requestFullscreen) wrapper.requestFullscreen();
-    else if (wrapper.mozRequestFullScreen) wrapper.mozRequestFullScreen();
-    else if (wrapper.webkitRequestFullscreen) wrapper.webkitRequestFullscreen();
-    else if (wrapper.msRequestFullscreen) wrapper.msRequestFullscreen();
-  } else {
-    // Exit Fullscreen
-    if (document.exitFullscreen) document.exitFullscreen();
-    else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
-    else if (document.webkitExitFullscreen) document.webkitExitFullScreen();
-    else if (document.msExitFullscreen) document.msExitFullscreen();
+  if (isFullscreen.value) {
+    if (document.exitFullscreen) await document.exitFullscreen().catch(() => {});
+    else if (document.webkitExitFullscreen) await document.webkitExitFullscreen().catch(() => {});
+    isFullscreen.value = false;
+    return;
+  }
+
+  try {
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (!isIOS && wrapper.requestFullscreen) {
+      await wrapper.requestFullscreen();
+    } else if (!isIOS && wrapper.webkitRequestFullscreen) {
+      await wrapper.webkitRequestFullscreen();
+    } else {
+      // iOS / Mobile Fallback
+      isFullscreen.value = true;
+    }
+  } catch (err) {
+    console.log("Native fullscreen failed, using CSS fallback", err);
+    isFullscreen.value = true;
   }
 };
 
-// --- Detection Loop and Render Functions ---
+// --- Detection Loop ---
 const clearDetection = () => {
   detectionCount.value = 0;
   avgConfidence.value = 0;
@@ -458,45 +481,37 @@ const renderPredictions = (predictions) => {
   const w = canvasRef.value.width;
   const h = canvasRef.value.height;
 
+  // Clear previous drawings
   ctx.clearRect(0, 0, w, h);
 
   predictions.forEach(prediction => {
     const { x, y, width, height, class: className, confidence } = prediction;
     
+    // Color coding
     let color = '#ef4444'; 
     const c = className.toLowerCase();
     if (c.includes('plant')) color = '#22c55e'; 
     if (c.includes('animal')) color = '#3b82f6'; 
     if (c.includes('vehicle')) color = '#f59e0b'; 
 
-    const originalTopLeftX = x - (width / 2);
-    const originalTopLeftY = y - (height / 2);
-
-    const applyFlip = facingMode.value === 'environment' || !facingMode.value; 
-    const mirroredTopLeftX = applyFlip
-      ? w - (originalTopLeftX + width) 
-      : originalTopLeftX;
+    // FIX: Standard coordinates calculation. 
+    // We do NOT flip math here anymore. CSS handles the visual flip if needed.
+    const topLeftX = x - (width / 2);
+    const topLeftY = y - (height / 2);
 
     // Segmentation
     if (prediction.points && prediction.points.length > 0) {
       ctx.beginPath();
-      
-      const firstX = applyFlip
-        ? w - prediction.points[0].x 
-        : prediction.points[0].x;
-
-      ctx.moveTo(firstX, prediction.points[0].y);
-
+      ctx.moveTo(prediction.points[0].x, prediction.points[0].y);
       for (let i = 1; i < prediction.points.length; i++) {
-        const pointX = applyFlip
-          ? w - prediction.points[i].x 
-          : prediction.points[i].x;
-        ctx.lineTo(pointX, prediction.points[i].y);
+        ctx.lineTo(prediction.points[i].x, prediction.points[i].y);
       }
       ctx.closePath();
+      
       ctx.globalAlpha = 0.4; 
       ctx.fillStyle = color;
       ctx.fill();
+      
       ctx.globalAlpha = 1.0; 
       ctx.strokeStyle = color;
       ctx.lineWidth = 2;
@@ -507,16 +522,16 @@ const renderPredictions = (predictions) => {
     ctx.globalAlpha = 1.0; 
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
-    ctx.strokeRect(mirroredTopLeftX, originalTopLeftY, width, height);
+    ctx.strokeRect(topLeftX, topLeftY, width, height);
 
     // Label
     ctx.fillStyle = color;
     const text = `${className} ${Math.round(confidence * 100)}%`;
     const textWidth = ctx.measureText(text).width;
-    ctx.fillRect(mirroredTopLeftX, originalTopLeftY - 25, textWidth + 10, 25);
+    ctx.fillRect(topLeftX, topLeftY - 25, textWidth + 10, 25);
     ctx.fillStyle = '#000000';
     ctx.font = 'bold 14px Inter';
-    ctx.fillText(text, mirroredTopLeftX + 5, originalTopLeftY - 7);
+    ctx.fillText(text, topLeftX + 5, topLeftY - 7);
   });
 };
 </script>
@@ -531,7 +546,6 @@ $teal-hover: #2dd4bf;
 $green: #22c55e;
 $blue: #3b82f6;
 $orange: #f59e0b;
-$nav-height: 80px;
 
 .dashboard-container {
   background-color: $bg-color;
@@ -544,7 +558,6 @@ $nav-height: 80px;
 // ===================================
 // GENERAL LAYOUT
 // ===================================
-
 .main-content { max-width: 1400px; margin: 0 auto; padding: 40px 0; }
 .page-header { 
   margin-bottom: 30px; 
@@ -558,13 +571,11 @@ $nav-height: 80px;
   gap: 30px; 
   @media (max-width: 1024px) { grid-template-columns: 1fr; } 
 }
-
 .left-column { display: flex; flex-direction: column; gap: 20px; }
 
 // ===================================
 // VIDEO WRAPPER & OVERLAYS
 // ===================================
-
 .video-wrapper {
   position: relative; 
   width: 100%; 
@@ -576,7 +587,7 @@ $nav-height: 80px;
   box-shadow: 0 0 40px rgba(0,0,0,0.5);
   
   @media (max-width: 600px) {
-    aspect-ratio: 4/3; // Taller for mobile
+    aspect-ratio: 4/3; 
     border-radius: 10px;
   }
 
@@ -584,37 +595,20 @@ $nav-height: 80px;
     position: absolute; inset: 0; 
     display: flex; flex-direction: column; 
     align-items: center; justify-content: center; 
-    background: #0d121c; 
-    z-index: 10; 
-    text-align: center;
+    background: #0d121c; z-index: 10; text-align: center;
     .camera-off-icon { position: relative; width: 100px; height: 100px; color: #718096; margin-bottom: 20px; svg { width: 100px; height: 100px; stroke-width: 1.5; } .red-slash { position: absolute; top: 50%; left: 0; right: 0; height: 8px; background-color: #ef4444; transform: rotate(45deg); border-radius: 4px; z-index: 1; box-shadow: 0 0 10px rgba(#ef4444, 0.5); } }
     .title-text { color: white; font-size: 1.8rem; font-weight: 700; margin-bottom: 10px; }
     .instruction-text { color: #94a3b8; max-width: 300px; line-height: 1.5; }
     @media (max-width: 600px) { .title-text { font-size: 1.5rem; } .instruction-text { font-size: 0.9rem; } }
   }
 
-  // Analyzing badge
   .analyzing-badge { position: absolute; top: 20px; right: 20px; background: rgba(0, 0, 0, 0.7); color: #fff; padding: 8px 16px; border-radius: 20px; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 600; z-index: 20; border: 1px solid rgba(255, 255, 255, 0.1); .spinner { width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; } }
   
-  // Exit Fullscreen Button (Center Bottom)
   .exit-fullscreen-overlay-btn {
-    position: absolute;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 1000;
-    transition: all 0.2s;
-
+    position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.6); color: white; border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 1000; transition: all 0.2s;
     &:hover { background: rgba(239, 68, 68, 0.8); border-color: transparent; }
     svg { width: 24px; height: 24px; }
   }
@@ -622,7 +616,7 @@ $nav-height: 80px;
   .live-video { 
     width: 100%; height: 100%; 
     object-fit: cover; 
-    transform: scaleX(-1); // Mirror
+    /* REMOVED DEFAULT TRANSFORM HERE. Now handled by .mirrored class */
     &.hidden { display: none; } 
   }
 
@@ -633,124 +627,77 @@ $nav-height: 80px;
   }
 }
 
-// ===================================
-// FULLSCREEN STYLES (Portrait / Mobile)
-// ===================================
-.video-wrapper:fullscreen {
-  width: 100vw;
-  height: 100vh;
-  aspect-ratio: unset;
-  border-radius: 0;
-  background: black;
-  
-  .live-video, .detection-canvas {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; // Crucial for "Portrait" feel on mobile
-  }
-
-  // Ensure button stays at bottom even if video is tall
-  .exit-fullscreen-overlay-btn {
-    position: fixed; 
-    bottom: 40px;
-  }
+// MIRROR CLASS (For Selfie Mode)
+.mirrored {
+  transform: scaleX(-1);
 }
 
-// Vendor prefixes
+// ===================================
+// FULLSCREEN STYLES
+// ===================================
+.video-wrapper:fullscreen {
+  width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0; background: black;
+  .live-video, .detection-canvas { width: 100%; height: 100%; object-fit: cover; }
+  .exit-fullscreen-overlay-btn { position: fixed; bottom: 40px; }
+}
 :-webkit-full-screen .video-wrapper { width: 100vw; height: 100vh; aspect-ratio: unset; }
-:-moz-full-screen .video-wrapper { width: 100vw; height: 100vh; aspect-ratio: unset; }
 
+// CSS FALLBACK Fullscreen
+.video-wrapper.force-fullscreen {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 99999; background: #000; border-radius: 0; aspect-ratio: unset; margin: 0;
+  .live-video, .detection-canvas { width: 100%; height: 100%; object-fit: cover; }
+  .exit-fullscreen-overlay-btn { position: fixed; bottom: 40px; }
+}
 
 // ===================================
 // CONTROLS BAR
 // ===================================
-
 .controls-bar { 
-  display: flex; 
-  gap: 15px; 
-  
+  display: flex; gap: 15px; 
   @media (max-width: 600px) {
     flex-wrap: wrap; 
-    .btn-primary, .btn-secondary {
-        flex: 1 1 auto; 
-        min-width: 40%; 
-    }
+    .btn-primary, .btn-secondary { flex: 1 1 auto; min-width: 40%; }
   }
-
   button { 
-    padding: 12px 24px; 
-    border-radius: 8px; 
-    font-weight: 600; 
-    cursor: pointer; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    gap: 8px; 
-    font-size: 1rem; 
+    padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; 
+    display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1rem; 
   } 
-  
   .btn-primary { background-color: #ef4444; color: white; border: none; } 
   .btn-stop { background-color: #ef4444; color: white; &:hover { background-color: #dc2626; } } 
-  
   .btn-secondary { 
-    background: transparent; 
-    border: 1px solid #334155; 
-    color: white; 
+    background: transparent; border: 1px solid #334155; color: white; 
     &:hover { border-color: $teal; } 
-    
     &.flip-btn svg { width: 20px; height: 20px; }
   } 
-
   @media (max-width: 600px) {
-    .btn-secondary {
-      padding: 10px 15px; 
-      font-size: 0.9rem;
-      flex-direction: column; 
-      gap: 2px;
-    }
-    .btn-primary {
-      padding: 12px 15px;
-      font-size: 0.9rem;
-    }
+    .btn-secondary { padding: 10px 15px; font-size: 0.9rem; flex-direction: column; gap: 2px; }
+    .btn-primary { padding: 12px 15px; font-size: 0.9rem; }
   }
 }
 
 // ===================================
 // STATS PANEL
 // ===================================
-
 .stats-panel { 
-  display: grid; 
-  grid-template-columns: repeat(4, 1fr); 
-  background-color: #0a0a0a; 
-  padding: 20px; 
-  border-radius: 12px; 
-  border: 1px solid #1e293b; 
-  
+  display: grid; grid-template-columns: repeat(4, 1fr); 
+  background-color: #0a0a0a; padding: 20px; border-radius: 12px; border: 1px solid #1e293b; 
   .stat { 
     display: flex; flex-direction: column; gap: 5px; 
     border-right: 1px solid #1e293b; padding-left: 20px; 
-    &:last-child { border-right: none; } 
-    &:first-child { padding-left: 0; } 
+    &:last-child { border-right: none; } &:first-child { padding-left: 0; } 
     .label { color: #94a3b8; font-size: 0.9rem; } 
     .value { font-size: 1.5rem; font-weight: 700; color: white; } 
-    .value.teal { color: $teal; } 
-    .value.green { color: $green; } 
+    .value.teal { color: $teal; } .value.green { color: $green; } 
     .value.text-gray { color: #64748b; font-size: 1.2rem; } 
   } 
-  
   @media (max-width: 768px) { 
-    grid-template-columns: 1fr 1fr; 
-    gap: 20px; 
-    padding: 15px;
-    .stat { 
-      border-right: none; padding-left: 0; 
-      .value { font-size: 1.3rem; }
-    } 
+    grid-template-columns: 1fr 1fr; gap: 20px; padding: 15px;
+    .stat { border-right: none; padding-left: 0; .value { font-size: 1.3rem; } } 
   } 
 }
 
-// ... (Rest of CSS: right column, modal, tips, etc. is preserved) ...
+// ... (Right column and modal styles unchanged) ...
 .right-column { display: flex; flex-direction: column; gap: 20px; }
 .info-card { background-color: $card-bg; border-radius: 12px; padding: 20px; border: 1px solid #1e293b; }
 .tips-card { border: 1px solid rgba($teal, 0.3); background: linear-gradient(180deg, rgba($teal, 0.05) 0%, $card-bg 100%); .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; .icon-info { color: $teal; font-weight: bold; border: 1px solid $teal; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; } h3 { font-size: 1.1rem; color: white; margin: 0; } } ul { padding-left: 20px; color: #cbd5e1; li { margin-bottom: 8px; font-size: 0.9rem; } } }
@@ -759,58 +706,24 @@ $nav-height: 80px;
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0, 0, 0, 0.8);
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8);
   display: flex; align-items: center; justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(5px);
+  z-index: 1000; backdrop-filter: blur(5px);
 }
-
 .modal-content {
-  background: $card-bg;
-  border: 1px solid #1e293b;
-  border-radius: 16px;
-  padding: 30px;
-  width: 90%;
-  max-width: 400px;
-  text-align: center;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-  animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-
-  .modal-icon {
-    width: 60px; height: 60px;
-    background: rgba($teal, 0.1);
-    color: $teal;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 20px;
-    svg { width: 30px; height: 30px; }
-  }
-
+  background: $card-bg; border: 1px solid #1e293b; border-radius: 16px;
+  padding: 30px; width: 90%; max-width: 400px; text-align: center;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  .modal-icon { width: 60px; height: 60px; background: rgba($teal, 0.1); color: $teal; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; svg { width: 30px; height: 30px; } }
   h2 { font-size: 1.5rem; color: white; margin-bottom: 10px; }
   p { color: #94a3b8; font-size: 0.95rem; margin-bottom: 25px; line-height: 1.5; }
-
   .modal-actions {
     display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px;
     .full-width { width: 100%; justify-content: center; }
-    .btn-primary {
-      background-color: $teal; color: #000000; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.2s ease;
-      &:hover { background-color: $teal-hover; transform: translateY(-1px); box-shadow: 0 4px 12px rgba($teal, 0.3); }
-    }
-    .btn-outline {
-      background: transparent; border: 1px solid #334155; color: white; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;
-      &:hover { border-color: $teal; color: $teal; background: rgba($teal, 0.05); }
-    }
+    .btn-primary { background-color: $teal; color: #000000; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.2s ease; &:hover { background-color: $teal-hover; transform: translateY(-1px); box-shadow: 0 4px 12px rgba($teal, 0.3); } }
+    .btn-outline { background: transparent; border: 1px solid #334155; color: white; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; &:hover { border-color: $teal; color: $teal; background: rgba($teal, 0.05); } }
   }
-
-  .btn-text {
-    background: none; border: none; color: #64748b; cursor: pointer; font-size: 0.9rem; text-decoration: underline;
-    &:hover { color: white; }
-  }
+  .btn-text { background: none; border: none; color: #64748b; cursor: pointer; font-size: 0.9rem; text-decoration: underline; &:hover { color: white; } }
 }
-
-@keyframes modalPop {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
-}
+@keyframes modalPop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 </style>
