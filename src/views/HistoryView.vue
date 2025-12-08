@@ -2,7 +2,6 @@
   <div class="dashboard-container">
     
     <!-- ================= NAVBAR ================= -->
-    <!-- FIX: Use the component, do not manually write HTML here -->
     <Navbar />
 
     <main class="main-content">
@@ -144,10 +143,16 @@
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router'; 
-import Navbar from '../components/navbar.vue'; // Correct Import
+import Navbar from '../components/navbar.vue';
 
 const router = useRouter();
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
+// --- FIX: Dynamic URL Handling ---
+// This uses /api/detections on Vercel and http://localhost:5000/api/detections locally.
+// This prevents the 404 (Not Found) or Network Error.
+const API_URL = import.meta.env.PROD 
+  ? '/api/detections' 
+  : 'http://localhost:5000/api/detections';
 
 // --- Data State ---
 const historyData = ref([]);
@@ -155,7 +160,7 @@ const isLoading = ref(true);
 
 // --- Pagination State ---
 const currentPage = ref(1);
-const itemsPerPage = 5; // Change this to show more/less
+const itemsPerPage = 5; 
 
 // --- Fetch Data ---
 const fetchHistory = async () => {
@@ -167,7 +172,7 @@ const fetchHistory = async () => {
   }
 
   try {
-    const response = await axios.get(BACKEND_URL, {
+    const response = await axios.get(API_URL, {
       headers: {
         'Authorization': `Bearer ${token}` 
       }
@@ -176,7 +181,7 @@ const fetchHistory = async () => {
     // Map response
     historyData.value = response.data.map(item => ({
       ...item,
-      // Format Timestamp: "Dec 08, 2025 6:21 PM"
+      // Format Timestamp
       timestamp: new Date(item.timestamp).toLocaleString('en-US', { 
         year: 'numeric', month: 'short', day: '2-digit', 
         hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true 
@@ -270,13 +275,13 @@ $orange: #f59e0b;
 
 // Table Container
 .table-container { 
-  background-color: $card-bg; border-radius: 12px; border: 1px solid $border-color; overflow: hidden; // Hidden overflow handles rounded corners
+  background-color: $card-bg; border-radius: 12px; border: 1px solid $border-color; overflow: hidden; 
   .state-msg { padding: 40px; text-align: center; color: #94a3b8; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 10px; }
   .spinner { width: 20px; height: 20px; border: 2px solid $teal; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
 }
 
 table.responsive-table {
-  width: 100%; border-collapse: collapse; min-width: 800px; // Default min-width for desktop
+  width: 100%; border-collapse: collapse; min-width: 800px;
   
   thead th { text-align: left; padding: 20px; color: white; font-weight: 600; border-bottom: 1px solid $border-color; background: rgba(0,0,0,0.2); }
   tbody td { padding: 20px; border-bottom: 1px solid $border-color; color: #cbd5e1; font-size: 0.95rem; vertical-align: middle; }
@@ -326,14 +331,14 @@ table.responsive-table {
     border-bottom: 1px solid $border-color;
     background-color: rgba(255, 255, 255, 0.02);
     border-radius: 8px;
-    padding: 15px; /* Increased padding */
+    padding: 15px; 
   }
 
   // 4. Style Cells
   tbody td {
     display: flex;
     justify-content: space-between;
-    align-items: center; /* Vertically align label and content */
+    align-items: center; 
     text-align: right;
     padding: 12px 5px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -348,24 +353,22 @@ table.responsive-table {
       text-transform: uppercase;
       font-size: 0.8rem;
       margin-right: 20px;
-      flex-shrink: 0; /* Prevent label from squishing */
+      flex-shrink: 0;
     }
   }
 
   // === FIX FOR IMAGE NAME ===
   .col-img { 
-    max-width: 100% !important; /* Allow full width */
-    white-space: normal !important; /* Allow text to wrap */
+    max-width: 100% !important; 
+    white-space: normal !important; 
     overflow: visible !important; 
-    text-overflow: unset !important; /* Remove ellipsis (...) */
-    word-break: break-word; /* Break long filenames if needed */
+    text-overflow: unset !important; 
+    word-break: break-word; 
     text-align: right;
   }
 
-  // Specific adjustments for content in mobile
   .progress-wrap { width: 120px !important; } 
   
-  // Pagination on mobile
   .pagination {
     flex-direction: column; gap: 15px; text-align: center;
   }

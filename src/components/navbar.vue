@@ -106,7 +106,11 @@ import axios from 'axios';
 const router = useRouter();
 const route = useRoute();
 
-const AUTH_ME_URL = 'http://localhost:5000/api/auth/me'; 
+// --- FIX: Dynamic URL Handling ---
+// If on Vercel (PROD), use relative path. If local, use localhost:5000
+const AUTH_ME_URL = import.meta.env.PROD 
+  ? '/api/auth/me' 
+  : 'http://localhost:5000/api/auth/me';
 
 // --- State ---
 const navLinks = ref([
@@ -119,8 +123,8 @@ const navLinks = ref([
 
 const isLoggedIn = ref(!!localStorage.getItem('userToken'));
 const userEmail = ref(localStorage.getItem('userEmail') || '');
-const showDropdown = ref(false); // Desktop dropdown
-const isMobileMenuOpen = ref(false); // Mobile menu toggle
+const showDropdown = ref(false); 
+const isMobileMenuOpen = ref(false);
 const menuRef = ref(null);
 
 const userInitial = computed(() => {
@@ -134,6 +138,8 @@ const checkAuthStatus = async () => {
   
   if (token) {
     isLoggedIn.value = true;
+    
+    // Only fetch if we don't have the email yet
     if (!userEmail.value) {
       try {
         const response = await axios.get(AUTH_ME_URL, {
@@ -142,8 +148,13 @@ const checkAuthStatus = async () => {
         userEmail.value = response.data.email;
         localStorage.setItem('userEmail', response.data.email);
       } catch (error) {
-        console.error("Invalid token:", error);
-        handleLogout();
+        console.error("Auth check failed:", error);
+        
+        // FIX: Only logout if it is an Auth Error (401/403)
+        // Do NOT logout on Network Error (which was happening before)
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          handleLogout();
+        }
       }
     }
   } else {
@@ -170,7 +181,7 @@ const handleLogout = () => {
   localStorage.removeItem('userEmail');
   isLoggedIn.value = false;
   showDropdown.value = false;
-  isMobileMenuOpen.value = false; // Close mobile menu
+  isMobileMenuOpen.value = false; 
   userEmail.value = '';
   router.push('/login');
 };
@@ -229,8 +240,8 @@ $bg-color: #050b14;
    ========================================= */
 
 /* 1. Links */
-.desktop-only { display: flex; } /* Shown by default */
-.mobile-only { display: none; }  /* Hidden by default */
+.desktop-only { display: flex; } 
+.mobile-only { display: none; } 
 
 .nav-links a { 
   color: $text-color; text-decoration: none; margin: 0 20px; font-size: 0.9rem; transition: color 0.3s; 
@@ -274,10 +285,7 @@ $bg-color: #050b14;
    RESPONSIVE STYLES (Max Width 920px)
    ========================================= */
 @media (max-width: 920px) {
-  /* HIDE DESKTOP ELEMENTS */
   .desktop-only { display: none !important; }
-  
-  /* SHOW MOBILE ELEMENTS */
   .mobile-only { display: block !important; }
 
   /* 1. Hamburger Button */
@@ -293,21 +301,19 @@ $bg-color: #050b14;
   .mobile-menu {
     position: absolute;
     top: $nav-height; left: 0; width: 100%;
-    background-color: $bg-color; /* Match page background */
+    background-color: $bg-color; 
     border-bottom: 1px solid #1e293b;
     padding: 20px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.8);
     z-index: 101;
     display: flex; flex-direction: column; gap: 20px;
 
-    /* Mobile User Info */
     .mobile-user-section {
       display: flex; align-items: center; gap: 15px; padding-bottom: 15px; border-bottom: 1px solid #1e293b;
       .avatar { width: 50px; height: 50px; background-color: $teal; color: #000; font-weight: 700; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
       .info { display: flex; flex-direction: column; .label { font-size: 0.8rem; color: #94a3b8; } .email { color: white; font-weight: 600; font-size: 1rem; } }
     }
 
-    /* Mobile Links */
     .mobile-links {
       display: flex; flex-direction: column; gap: 15px;
       a { 
@@ -316,7 +322,6 @@ $bg-color: #050b14;
       }
     }
 
-    /* Mobile Auth Buttons */
     .mobile-auth {
       padding-top: 10px; border-top: 1px solid #1e293b;
       .logout-btn { background-color: #ef4444; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 600; cursor: pointer; &:hover { background-color: #dc2626; } }
