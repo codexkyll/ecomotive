@@ -156,6 +156,15 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
+// Connect to DB (Ensure this handles connection caching effectively)
+connectDB();
+
+// Only listen if running locally (not in production)
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  });
+}
+
+// Export the Express API for Vercel
+export default app;
