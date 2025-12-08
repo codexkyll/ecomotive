@@ -45,8 +45,6 @@
               <svg v-if="!isFullscreen" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9M20.25 20.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>
               <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 10.5h.75A.75.75 0 0110.5 11.25v.75m-9 0v-.75a.75.75 0 01.75-.75h.75m0 1.5h-.75A.75.75 0 003 12.75v.75m9 0h-.75a.75.75 0 01-.75-.75v-.75m0-9h-.75A.75.75 0 0012 3v-.75m0 9h.75a.75.75 0 01.75.75v.75m9 0v-.75a.75.75 0 00-.75-.75h-.75m0-1.5h.75A.75.75 0 0121 12.75v.75m0-9h-.75a.75.75 0 00-.75.75v.75" /></svg>
             </button>
-
-            <!-- D. Flip Camera Button (REMOVED FROM HERE - MOVED TO CONTROLS BAR) -->
             
             <!-- E. Live Video Element -->
             <video ref="videoRef" autoplay playsinline muted class="live-video" :class="{ 'hidden': !isStreaming }"></video>
@@ -62,7 +60,7 @@
               <span v-else>■ Stop Camera</span>
             </button>
             
-            <!-- NEW FLIP CAMERA BUTTON -->
+            <!-- FLIP CAMERA BUTTON -->
             <button v-if="isStreaming" @click="flipCamera" class="btn-secondary flip-btn" title="Flip Camera">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 7.5a4.5 4.5 0 119 0m-9 0a4.5 4.5 0 009 0M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11.25H9M12 8.25V12M15 15l-3 3-3-3" /></svg>
               <span>Flip Camera</span>
@@ -74,7 +72,6 @@
           </div>
 
           <!-- 3. Live Stats Bar -->
-          <!-- ... (Stats Panel remains the same) ... -->
           <div class="stats-panel">
             <div class="stat">
               <span class="label">Active Detections</span>
@@ -97,7 +94,6 @@
         </div>
 
         <!-- ================= RIGHT COLUMN ================= -->
-        <!-- ... (Right Column remains the same) ... -->
         <aside class="right-column">
           <div class="info-card tips-card">
             <div class="card-header">
@@ -197,7 +193,7 @@ const isProcessing = ref(false);
 const showAuthModal = ref(false); 
 const isFullscreen = ref(false);
 const facingMode = ref('environment'); // 'environment' (back) or 'user' (front)
-const isMobileDevice = ref(false); // Kept for the mobile fallback logic
+const isMobileDevice = ref(false);
 
 // Internal variables
 let stream = null;
@@ -325,7 +321,7 @@ const toggleCamera = () => {
 const flipCamera = () => {
   stopCamera(); // Stop current stream
   
-  // Toggle facing mode: 'environment' -> 'user' -> 'environment'
+  // Toggle facing mode: 'environment' (back) <-> 'user' (front)
   facingMode.value = facingMode.value === 'environment' ? 'user' : 'environment';
   
   startCamera(); // Restart camera with new facing mode
@@ -356,7 +352,8 @@ const clearDetection = () => {
   if (ctx) ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
 };
 
-// --- Detection Loop ---
+// --- Detection Loop and Render Functions (No functional changes needed here) ---
+
 const captureAndDetect = async () => {
   if (!isStreaming.value || !videoRef.value || !canvasRef.value || isProcessing.value) return;
 
@@ -443,9 +440,6 @@ const saveToHistory = async (prediction) => {
   }
 };
 
-// ============================================
-//  RENDER FUNCTION
-// ============================================
 const renderPredictions = (predictions) => {
   const ctx = canvasRef.value.getContext('2d');
   const w = canvasRef.value.width;
@@ -465,9 +459,8 @@ const renderPredictions = (predictions) => {
     const originalTopLeftX = x - (width / 2);
     const originalTopLeftY = y - (height / 2);
 
-    // Apply horizontal flip if camera is 'environment' (back/default desktop) which needs mirroring for user perception.
-    // Front camera ('user') is already mirrored by video element, so it doesn't need re-flipping for the canvas.
-    const mirroredTopLeftX = facingMode.value === 'environment' || !facingMode.value
+    const applyFlip = facingMode.value === 'environment' || !facingMode.value; // Mirror back-facing camera predictions
+    const mirroredTopLeftX = applyFlip
       ? w - (originalTopLeftX + width) 
       : originalTopLeftX;
 
@@ -475,8 +468,6 @@ const renderPredictions = (predictions) => {
     if (prediction.points && prediction.points.length > 0) {
       ctx.beginPath();
       
-      const applyFlip = facingMode.value === 'environment' || !facingMode.value;
-
       const firstX = applyFlip
         ? w - prediction.points[0].x 
         : prediction.points[0].x;
@@ -537,15 +528,46 @@ $nav-height: 80px;
   padding: 0 5%;
 }
 
+// ===================================
+// GENERAL LAYOUT
+// ===================================
+
 .main-content { max-width: 1400px; margin: 0 auto; padding: 40px 0; }
-.page-header { margin-bottom: 30px; h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 10px; color: white; } .subtitle { color: #94a3b8; font-size: 1.1rem; } }
-.content-grid { display: grid; grid-template-columns: 3fr 1fr; gap: 30px; @media (max-width: 1024px) { grid-template-columns: 1fr; } }
+.page-header { 
+  margin-bottom: 30px; 
+  h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 10px; color: white; } 
+  .subtitle { color: #94a3b8; font-size: 1.1rem; } 
+  @media (max-width: 600px) { h1 { font-size: 2rem; } .subtitle { font-size: 1rem; } }
+}
+.content-grid { 
+  display: grid; 
+  grid-template-columns: 3fr 1fr; 
+  gap: 30px; 
+  @media (max-width: 1024px) { grid-template-columns: 1fr; } 
+}
 
 .left-column { display: flex; flex-direction: column; gap: 20px; }
+
+// ===================================
+// VIDEO WRAPPER & OVERLAYS
+// ===================================
+
 .video-wrapper {
-  position: relative; width: 100%; aspect-ratio: 16/9; background-color: #000; border-radius: 16px; overflow: hidden; border: 1px solid #1e293b; box-shadow: 0 0 40px rgba(0,0,0,0.5);
+  position: relative; 
+  width: 100%; 
+  aspect-ratio: 16/9; 
+  background-color: #000; 
+  border-radius: 16px; 
+  overflow: hidden; 
+  border: 1px solid #1e293b; 
+  box-shadow: 0 0 40px rgba(0,0,0,0.5);
   
-  // CAMERA OFF OVERLAY STYLES
+  // Mobile Adjustments for a more square-ish or taller video container
+  @media (max-width: 600px) {
+    aspect-ratio: 4/3; // More suitable for phone screens
+    border-radius: 10px;
+  }
+
   .camera-off-overlay { 
     position: absolute; inset: 0; 
     display: flex; flex-direction: column; 
@@ -553,38 +575,11 @@ $nav-height: 80px;
     background: #0d121c; 
     z-index: 10; 
     text-align: center;
-
-    .camera-off-icon {
-      position: relative;
-      width: 100px; height: 100px;
-      color: #718096; 
-      margin-bottom: 20px;
-
-      svg { width: 100px; height: 100px; stroke-width: 1.5; }
-      
-      .red-slash {
-        position: absolute;
-        top: 50%; left: 0; right: 0;
-        height: 8px;
-        background-color: #ef4444; 
-        transform: rotate(45deg);
-        border-radius: 4px;
-        z-index: 1;
-        box-shadow: 0 0 10px rgba(#ef4444, 0.5);
-      }
-    }
-
-    .title-text { 
-      color: white; 
-      font-size: 1.8rem; 
-      font-weight: 700; 
-      margin-bottom: 10px; 
-    }
-    .instruction-text { 
-      color: #94a3b8; 
-      max-width: 300px;
-      line-height: 1.5;
-    }
+    // ... (Icon and text styles for overlay)
+    .camera-off-icon { position: relative; width: 100px; height: 100px; color: #718096; margin-bottom: 20px; svg { width: 100px; height: 100px; stroke-width: 1.5; } .red-slash { position: absolute; top: 50%; left: 0; right: 0; height: 8px; background-color: #ef4444; transform: rotate(45deg); border-radius: 4px; z-index: 1; box-shadow: 0 0 10px rgba(#ef4444, 0.5); } }
+    .title-text { color: white; font-size: 1.8rem; font-weight: 700; margin-bottom: 10px; }
+    .instruction-text { color: #94a3b8; max-width: 300px; line-height: 1.5; }
+    @media (max-width: 600px) { .title-text { font-size: 1.5rem; } .instruction-text { font-size: 0.9rem; } }
   }
 
   // Analyzing badge (positioned top-right)
@@ -601,7 +596,7 @@ $nav-height: 80px;
     padding: 10px;
     border-radius: 50%;
     cursor: pointer;
-    z-index: 20;
+    z-index: 30; // Increased Z-index to ensure it's clickable on top of video/canvas layers
     width: 40px;
     height: 40px;
     display: flex;
@@ -614,22 +609,21 @@ $nav-height: 80px;
     &:hover { background: rgba(0, 0, 0, 0.7); }
   }
   
-  // NOTE: .flip-camera-btn is no longer here! It's in .controls-bar
-  
   .live-video { 
     width: 100%; height: 100%; 
     object-fit: cover; 
-    // Video element is mirrored by default for 'user' (front) and often 'environment' on desktop.
-    // The explicit CSS flip is removed here, and the mirroring for bounding boxes is handled in the JS/renderPredictions function, based on facingMode.
-    // For a cleaner approach: keep the video mirrored on desktop for *user-facing* experience, and let JS handle the canvas mirror logic.
-    transform: scaleX(-1); // Re-added for standard mirror on video element (desktop webcam standard)
+    transform: scaleX(-1); // Standard mirror 
     &.hidden { display: none; } 
   }
 
-  .detection-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+  .detection-canvas { 
+    position: absolute; top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    pointer-events: none; // Crucial for clicking the fullscreen button below it
+  }
 }
 
-// FULLSCREEN STYLES
+// FULLSCREEN STYLES (unchanged)
 .video-wrapper:fullscreen {
   width: 100vw;
   height: 100vh;
@@ -643,21 +637,31 @@ $nav-height: 80px;
     object-fit: contain; 
   }
 }
-:-webkit-full-screen .video-wrapper {
-  width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0;
-}
-:-moz-full-screen .video-wrapper {
-  width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0;
-}
-:-ms-fullscreen .video-wrapper {
-  width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0;
-}
+// Vendor-prefixed fullscreen styles (unchanged)
+:-webkit-full-screen .video-wrapper { width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0; }
+:-moz-full-screen .video-wrapper { width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0; }
+:-ms-fullscreen .video-wrapper { width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0; }
 
+
+// ===================================
+// CONTROLS BAR
+// ===================================
 
 .controls-bar { 
   display: flex; 
   gap: 15px; 
   
+  @media (max-width: 600px) {
+    flex-wrap: wrap; // Allow buttons to wrap to the next line on mobile
+    
+    // Ensure buttons take up equal space as shown in image
+    .btn-primary, .btn-secondary {
+        flex: 1 1 auto; // Allow growing/shrinking
+        min-width: 30%; // Prevent them from getting too small
+        text-align: center;
+    }
+  }
+
   button { 
     padding: 12px 24px; 
     border-radius: 8px; 
@@ -665,22 +669,13 @@ $nav-height: 80px;
     cursor: pointer; 
     display: flex; 
     align-items: center; 
+    justify-content: center; // Center content in the flex container
     gap: 8px; 
     font-size: 1rem; 
   } 
   
-  .btn-primary { 
-    background-color: $teal; 
-    color: black; 
-    border: none; 
-    &:hover { background-color: $teal-hover; } 
-  } 
-  
-  .btn-stop { 
-    background-color: #ef4444; 
-    color: white; 
-    &:hover { background-color: #dc2626; } 
-  } 
+  .btn-primary { background-color: #ef4444; color: white; border: none; } 
+  .btn-stop { background-color: #ef4444; color: white; &:hover { background-color: #dc2626; } } 
   
   .btn-secondary { 
     background: transparent; 
@@ -688,13 +683,62 @@ $nav-height: 80px;
     color: white; 
     &:hover { border-color: $teal; } 
     
-    // Make flip-btn text smaller/less prominent if needed, but keeping it standard for now.
-    &.flip-btn {
-        svg { width: 20px; height: 20px; } // Adjust icon size to fit better
+    &.flip-btn svg { width: 20px; height: 20px; }
+  } 
+
+  // Mobile-specific button appearance (to match image)
+  @media (max-width: 600px) {
+    .btn-secondary {
+      padding: 10px 15px; 
+      font-size: 0.9rem;
+      flex-direction: column; // Stack icon and text
+      gap: 2px;
     }
+
+    .btn-primary {
+      padding: 12px 15px;
+      font-size: 0.9rem;
+    }
+  }
+}
+
+
+// ===================================
+// STATS PANEL
+// ===================================
+
+.stats-panel { 
+  display: grid; 
+  grid-template-columns: repeat(4, 1fr); 
+  background-color: #0a0a0a; 
+  padding: 20px; 
+  border-radius: 12px; 
+  border: 1px solid #1e293b; 
+  
+  .stat { 
+    display: flex; flex-direction: column; gap: 5px; 
+    border-right: 1px solid #1e293b; padding-left: 20px; 
+    &:last-child { border-right: none; } 
+    &:first-child { padding-left: 0; } 
+    .label { color: #94a3b8; font-size: 0.9rem; } 
+    .value { font-size: 1.5rem; font-weight: 700; color: white; } 
+    .value.teal { color: $teal; } 
+    .value.green { color: $green; } 
+    .value.text-gray { color: #64748b; font-size: 1.2rem; } 
+  } 
+  
+  @media (max-width: 768px) { 
+    grid-template-columns: 1fr 1fr; 
+    gap: 20px; 
+    padding: 15px;
+    .stat { 
+      border-right: none; padding-left: 0; 
+      .value { font-size: 1.3rem; }
+    } 
   } 
 }
-.stats-panel { display: grid; grid-template-columns: repeat(4, 1fr); background-color: #0a0a0a; padding: 20px; border-radius: 12px; border: 1px solid #1e293b; .stat { display: flex; flex-direction: column; gap: 5px; border-right: 1px solid #1e293b; padding-left: 20px; &:last-child { border-right: none; } &:first-child { padding-left: 0; } .label { color: #94a3b8; font-size: 0.9rem; } .value { font-size: 1.5rem; font-weight: 700; color: white; } .value.teal { color: $teal; } .value.green { color: $green; } .value.text-gray { color: #64748b; font-size: 1.2rem; } } @media (max-width: 768px) { grid-template-columns: 1fr 1fr; gap: 20px; .stat { border-right: none; padding-left: 0; } } }
+
+// ... (Rest of the CSS for right column and modal remains the same) ...
 .right-column { display: flex; flex-direction: column; gap: 20px; }
 .info-card { background-color: $card-bg; border-radius: 12px; padding: 20px; border: 1px solid #1e293b; }
 .tips-card { border: 1px solid rgba($teal, 0.3); background: linear-gradient(180deg, rgba($teal, 0.05) 0%, $card-bg 100%); .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; .icon-info { color: $teal; font-weight: bold; border: 1px solid $teal; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; } h3 { font-size: 1.1rem; color: white; margin: 0; } } ul { padding-left: 20px; color: #cbd5e1; li { margin-bottom: 8px; font-size: 0.9rem; } } }
