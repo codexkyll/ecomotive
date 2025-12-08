@@ -23,14 +23,12 @@ const router = createRouter({
     {
       path: '/live-camera',
       name: 'live-camera',
-      component: LivecameraView,
-      meta: { requiresAuth: true } // Protect this route
+      component: LivecameraView
     },
     {
       path: '/history',
       name: 'history',
-      component: HistoryView,
-      meta: { requiresAuth: true } // Protect this route
+      component: HistoryView
     },
     {
       path: '/about-us',
@@ -50,16 +48,9 @@ const router = createRouter({
   ]
 })
 
-// --- Navigation Guard ---
+// Navigation Guard removed/simplified so it doesn't block you
 router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('userToken');
-
-  if (to.meta.requiresAuth && !token) {
-    // If trying to access a protected page without a token, go to login
-    next('/login');
-  } else {
-    next();
-  }
+  next();
 });
 
 export default router
