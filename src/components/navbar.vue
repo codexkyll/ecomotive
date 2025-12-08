@@ -6,7 +6,7 @@
       <span>EcoMotive</span>
     </div>
 
-    <!-- 2. Desktop Navigation (Visible > 920px) -->
+    <!-- 2. Desktop Navigation -->
     <div class="nav-links desktop-only">
       <router-link 
         v-for="link in navLinks" 
@@ -18,7 +18,7 @@
       </router-link>
     </div>
 
-    <!-- 3. Desktop Auth Group (Visible > 920px) -->
+    <!-- 3. Desktop Auth Group -->
     <div class="auth-group desktop-only">
       <template v-if="!isLoggedIn">
         <button class="login-btn" @click="router.push('/login')">Login</button>
@@ -39,7 +39,6 @@
             </div>
             <div class="divider"></div>
             <button @click="handleLogout" class="logout-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
               Logout
             </button>
           </div>
@@ -47,18 +46,16 @@
       </div>
     </div>
 
-    <!-- 4. Hamburger Button (Visible <= 920px) -->
+    <!-- 4. Hamburger Button -->
     <button class="hamburger-btn mobile-only" @click="toggleMobileMenu" :class="{ 'active': isMobileMenuOpen }">
       <span class="bar"></span>
       <span class="bar"></span>
       <span class="bar"></span>
     </button>
 
-    <!-- 5. Mobile Menu Overlay (Visible <= 920px) -->
+    <!-- 5. Mobile Menu Overlay -->
     <transition name="slide-fade">
       <div v-if="isMobileMenuOpen" class="mobile-menu mobile-only">
-        
-        <!-- Mobile Profile Section -->
         <div v-if="isLoggedIn" class="mobile-user-section">
           <div class="avatar">{{ userInitial }}</div>
           <div class="info">
@@ -67,7 +64,6 @@
           </div>
         </div>
 
-        <!-- Mobile Links -->
         <div class="mobile-links">
           <router-link 
             v-for="link in navLinks" 
@@ -80,7 +76,6 @@
           </router-link>
         </div>
 
-        <!-- Mobile Auth Actions -->
         <div class="mobile-auth">
           <template v-if="!isLoggedIn">
             <button class="login-btn full-width" @click="goToAndClose('/login')">Login</button>
@@ -106,13 +101,11 @@ import axios from 'axios';
 const router = useRouter();
 const route = useRoute();
 
-// --- FIX: Dynamic URL Handling ---
-// If on Vercel (PROD), use relative path. If local, use localhost:5000
+// --- FIX 1: Dynamic URL Handling ---
 const AUTH_ME_URL = import.meta.env.PROD 
   ? '/api/auth/me' 
   : 'http://localhost:5000/api/auth/me';
 
-// --- State ---
 const navLinks = ref([
   { name: 'Home', href: '/' },
   { name: 'Model Info', href: '/model-info' },
@@ -131,8 +124,6 @@ const userInitial = computed(() => {
   return userEmail.value ? userEmail.value.charAt(0).toUpperCase() : 'U';
 });
 
-// --- Methods ---
-
 const checkAuthStatus = async () => {
   const token = localStorage.getItem('userToken');
   
@@ -150,8 +141,9 @@ const checkAuthStatus = async () => {
       } catch (error) {
         console.error("Auth check failed:", error);
         
-        // FIX: Only logout if it is an Auth Error (401/403)
-        // Do NOT logout on Network Error (which was happening before)
+        // --- FIX 2: PREVENT FALSE LOGOUTS ---
+        // Only logout if the server EXPLICITLY says the token is wrong (401 or 403)
+        // Do NOT logout on 404 or Network Error
         if (error.response && (error.response.status === 401 || error.response.status === 403)) {
           handleLogout();
         }
@@ -192,7 +184,6 @@ const handleClickOutside = (event) => {
   }
 };
 
-// --- Watchers & Lifecycle ---
 watch(() => route.path, () => {
   checkAuthStatus();
   showDropdown.value = false;
@@ -275,7 +266,6 @@ $bg-color: #050b14;
     .logout-btn { 
       width: 100%; padding: 12px 15px; background: transparent; border: none; color: #ef4444; font-weight: 500; cursor: pointer; border-radius: 8px; text-align: left; 
       display: flex; align-items: center; gap: 10px;
-      svg { width: 18px; height: 18px; }
       &:hover { background-color: rgba(239, 68, 68, 0.1); } 
     }
   }

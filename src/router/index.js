@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import DashboardView from '../views/DashboardView.vue'
 import ModelInfoView from '../views/ModelInfoView.vue'
-import LivecameraView from '../views/LivecameraView.vue' // Ensure casing matches filename
+import LivecameraView from '../views/LivecameraView.vue' 
 import HistoryView from '../views/HistoryView.vue'
 import AboutView from '../views/AboutView.vue'
 import SignupView from '../views/SignupView.vue'
@@ -51,7 +51,6 @@ const router = createRouter({
 })
 
 // --- Navigation Guard ---
-// Checks if the user is logged in before accessing protected pages
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('userToken');
 
