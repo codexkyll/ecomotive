@@ -71,7 +71,7 @@
               ⟳ Clear
             </button>
 
-            <!-- Fullscreen (Moved here) -->
+            <!-- Fullscreen -->
             <button v-if="isStreaming" @click="toggleFullscreen" class="btn-secondary" title="Enter Fullscreen">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px; height:20px;">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9M20.25 20.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
@@ -241,6 +241,21 @@ const handleFullscreenChange = () => {
   isFullscreen.value = !!document.fullscreenElement;
 };
 
+// --- Auth Navigation Handlers (FIXED) ---
+const closeAuthModal = () => {
+  showAuthModal.value = false;
+};
+
+const goToLogin = () => {
+  showAuthModal.value = false;
+  router.push('/login');
+};
+
+const goToSignup = () => {
+  showAuthModal.value = false;
+  router.push('/signup');
+};
+
 // --- Camera Methods ---
 
 const startCamera = async () => {
@@ -253,8 +268,6 @@ const startCamera = async () => {
   try {
     statusText.value = 'Initializing...';
     
-    // For mobile: Ideal 720x1280 (Portrait). 
-    // For desktop: Ideal 1280x720 (Landscape).
     const constraints = isMobileDevice.value 
       ? { 
           facingMode: facingMode.value, 
@@ -705,7 +718,7 @@ $nav-height: 80px;
 // ===================================
 // STATS PANEL
 // ===================================
-// ... (Remains unchanged from original) ...
+
 .stats-panel { 
   display: grid; 
   grid-template-columns: repeat(4, 1fr); 
