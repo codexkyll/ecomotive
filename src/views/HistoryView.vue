@@ -8,108 +8,102 @@
         <p class="subtitle">View and analyze all past detections from MongoDB Atlas</p>
       </section>
 
-      <!-- ================= GUEST STATE ================= -->
-      <div v-if="!isLoggedIn" class="guest-card">
-        <div class="icon-lock">🔒</div>
-        <h2>Login Required</h2>
-        <p>You must be logged in to view your detection history.</p>
-        <button class="btn-primary" @click="router.push('/login')">Log In to Account</button>
-      </div>
+      <!-- ================= STATS CARDS (Always Visible) ================= -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="label">Total Detections</span>
+            <!-- Will show 0 if not logged in -->
+            <span class="value teal">{{ totalDetections }}</span>
+          </div>
+          <div class="stat-icon-box teal-bg">
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /></svg>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="label">Avg Accuracy</span>
+            <span class="value green">{{ avgAccuracy }}%</span>
+          </div>
+          <div class="stat-icon-box green-bg">
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="label">Avg Confidence</span>
+            <span class="value orange">{{ avgConfidence }}%</span>
+          </div>
+          <div class="stat-icon-box orange-bg">
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="label">Total Logs</span>
+            <span class="value blue">{{ totalDetections }}</span>
+          </div>
+          <div class="stat-icon-box blue-bg">
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
+          </div>
+        </div>
+      </section>
 
-      <!-- ================= LOGGED IN CONTENT ================= -->
-      <div v-else>
-        <!-- Stats Cards -->
-        <section class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-info">
-              <span class="label">Total Detections</span>
-              <span class="value teal">{{ totalDetections }}</span>
-            </div>
-            <div class="stat-icon-box teal-bg">
-               <!-- Icon -->
-               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /></svg>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-info">
-              <span class="label">Avg Accuracy</span>
-              <span class="value green">{{ avgAccuracy }}%</span>
-            </div>
-            <div class="stat-icon-box green-bg">
-               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-info">
-              <span class="label">Avg Confidence</span>
-              <span class="value orange">{{ avgConfidence }}%</span>
-            </div>
-            <div class="stat-icon-box orange-bg">
-               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-info">
-              <span class="label">Total Logs</span>
-              <span class="value blue">{{ totalDetections }}</span>
-            </div>
-            <div class="stat-icon-box blue-bg">
-               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
-            </div>
-          </div>
-        </section>
+      <!-- ================= TABLE (Always Visible) ================= -->
+      <div class="table-container">
+        
+        <div v-if="isLoading" class="state-msg">
+          <div class="spinner"></div> Loading history...
+        </div>
 
-        <!-- Table Container -->
-        <div class="table-container">
-          <div v-if="isLoading" class="state-msg">
-            <div class="spinner"></div> Loading history...
-          </div>
+        <!-- This shows if Array is empty (User not logged in OR User has no data) -->
+        <div v-else-if="historyData.length === 0" class="state-msg">
+          No detections found. Log in or go to Live Camera to start!
+        </div>
 
-          <div v-else-if="historyData.length === 0" class="state-msg">
-            No detections found. Go to Live Camera to start!
-          </div>
+        <div v-else>
+          <table class="responsive-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th><th>Image</th><th>Class</th><th>Accuracy</th><th>Precision</th><th>Confidence</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in paginatedData" :key="row._id">
+                <td data-label="Timestamp" class="col-time">{{ row.timestamp }}</td>
+                <td data-label="Image" class="col-img">{{ row.image }}</td>
+                <td data-label="Class"><span class="badge" :class="getClassColor(row.class)">{{ row.class }}</span></td>
+                
+                <td data-label="Accuracy" class="col-metric">
+                  <div class="progress-wrap">
+                    <div class="progress-track"><div class="progress-fill green" :style="{ width: row.accuracy + '%' }"></div></div>
+                    <span class="metric-val">{{ row.accuracy }}%</span>
+                  </div>
+                </td>
+                
+                <td data-label="Precision" class="col-metric">
+                  <div class="progress-wrap">
+                    <div class="progress-track"><div class="progress-fill blue" :style="{ width: row.precision + '%' }"></div></div>
+                    <span class="metric-val">{{ row.precision }}%</span>
+                  </div>
+                </td>
+                
+                <td data-label="Confidence" class="col-metric">
+                  <div class="progress-wrap">
+                    <div class="progress-track"><div class="progress-fill orange" :style="{ width: row.confidence + '%' }"></div></div>
+                    <span class="metric-val">{{ row.confidence }}%</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
-          <div v-else>
-            <table class="responsive-table">
-              <thead>
-                <tr>
-                  <th>Timestamp</th><th>Image</th><th>Class</th><th>Accuracy</th><th>Precision</th><th>Confidence</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="row in paginatedData" :key="row._id">
-                  <td data-label="Timestamp" class="col-time">{{ row.timestamp }}</td>
-                  <td data-label="Image" class="col-img">{{ row.image }}</td>
-                  <td data-label="Class"><span class="badge" :class="getClassColor(row.class)">{{ row.class }}</span></td>
-                  <td data-label="Accuracy" class="col-metric">
-                    <div class="progress-wrap">
-                      <div class="progress-track"><div class="progress-fill green" :style="{ width: row.accuracy + '%' }"></div></div>
-                      <span class="metric-val">{{ row.accuracy }}%</span>
-                    </div>
-                  </td>
-                  <td data-label="Precision" class="col-metric">
-                    <div class="progress-wrap">
-                      <div class="progress-track"><div class="progress-fill blue" :style="{ width: row.precision + '%' }"></div></div>
-                      <span class="metric-val">{{ row.precision }}%</span>
-                    </div>
-                  </td>
-                  <td data-label="Confidence" class="col-metric">
-                    <div class="progress-wrap">
-                      <div class="progress-track"><div class="progress-fill orange" :style="{ width: row.confidence + '%' }"></div></div>
-                      <span class="metric-val">{{ row.confidence }}%</span>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            <!-- Pagination -->
-            <div class="pagination">
-              <span class="page-info">Showing {{ pageStart + 1 }} to {{ Math.min(pageEnd, totalDetections) }} of {{ totalDetections }} results</span>
-              <div class="page-btns">
-                <button @click="prevPage" :disabled="currentPage === 1" class="btn-page">Previous</button>
-                <button @click="nextPage" :disabled="currentPage === totalPages" class="btn-page">Next</button>
-              </div>
+          <!-- Pagination -->
+          <div class="pagination">
+            <span class="page-info">Showing {{ pageStart + 1 }} to {{ Math.min(pageEnd, totalDetections) }} of {{ totalDetections }} results</span>
+            <div class="page-btns">
+              <button @click="prevPage" :disabled="currentPage === 1" class="btn-page">Previous</button>
+              <button @click="nextPage" :disabled="currentPage === totalPages" class="btn-page">Next</button>
             </div>
           </div>
         </div>
@@ -135,29 +129,28 @@ const API_URL = import.meta.env.PROD
 // State
 const historyData = ref([]);
 const isLoading = ref(true);
-const isLoggedIn = ref(false); // New state to track auth
 
 // Pagination
 const currentPage = ref(1);
 const itemsPerPage = 5; 
 
+// --- Fetch Data ---
 const fetchHistory = async () => {
   const token = localStorage.getItem('userToken');
 
-  // FIX: Don't redirect. Just update state to show Guest UI
+  // CHANGE: If no token, just stop loading. Do NOT show lock screen, do NOT redirect.
+  // This leaves historyData as [] (empty), so stats will be 0.
   if (!token) {
-    isLoggedIn.value = false;
     isLoading.value = false;
     return;
   }
-
-  isLoggedIn.value = true; // User is logged in
 
   try {
     const response = await axios.get(API_URL, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     
+    // Map response
     historyData.value = response.data.map(item => ({
       ...item,
       timestamp: new Date(item.timestamp).toLocaleString('en-US', { 
@@ -169,16 +162,14 @@ const fetchHistory = async () => {
 
   } catch (error) {
     console.error("Error fetching history:", error);
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      // If token is invalid, treat as logged out (but don't redirect hard)
-      localStorage.removeItem('userToken');
-      isLoggedIn.value = false;
-    }
+    // If error, just ensure data is empty so page doesn't break
+    historyData.value = [];
   } finally {
     isLoading.value = false;
   }
 };
 
+// --- Computed Stats (Automatically handle 0 length) ---
 const totalDetections = computed(() => historyData.value.length);
 const avgAccuracy = computed(() => {
   if (historyData.value.length === 0) return 0;
@@ -190,6 +181,8 @@ const avgConfidence = computed(() => {
   const sum = historyData.value.reduce((acc, curr) => acc + (curr.confidence || 0), 0);
   return (sum / historyData.value.length).toFixed(1);
 });
+
+// --- Pagination ---
 const totalPages = computed(() => Math.ceil(historyData.value.length / itemsPerPage));
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage;
@@ -198,6 +191,8 @@ const paginatedData = computed(() => {
 });
 const pageStart = computed(() => (currentPage.value - 1) * itemsPerPage);
 const pageEnd = computed(() => currentPage.value * itemsPerPage);
+
+// --- Methods ---
 const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++; };
 const prevPage = () => { if (currentPage.value > 1) currentPage.value--; };
 const getClassColor = (cls) => {
@@ -215,7 +210,7 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-/* Keeping your variables and styles */
+// --- Variables ---
 $bg-color: #050b14;
 $text-color: #e2e8f0;
 $card-bg: #0f172a; 
@@ -229,16 +224,7 @@ $orange: #f59e0b;
 .main-content { max-width: 1400px; margin: 0 auto; padding: 40px 0 80px; }
 .page-header { margin-bottom: 40px; h1 { font-size: 2.5rem; font-weight: 700; color: white; margin-bottom: 10px; } .subtitle { color: #94a3b8; font-size: 1.1rem; } }
 
-/* GUEST CARD STYLE */
-.guest-card {
-  background: $card-bg; border: 1px solid $border-color; border-radius: 16px; padding: 60px 20px; text-align: center;
-  .icon-lock { font-size: 3rem; margin-bottom: 20px; }
-  h2 { font-size: 2rem; color: white; margin-bottom: 10px; }
-  p { color: #94a3b8; margin-bottom: 30px; font-size: 1.1rem; }
-  .btn-primary { background: $teal; color: black; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; &:hover { background: #2dd4bf; } }
-}
-
-/* Existing Stats/Table Styles */
+/* Stats & Table Styles */
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px; .stat-card { background-color: $card-bg; border: 1px solid $border-color; border-radius: 12px; padding: 25px; display: flex; justify-content: space-between; align-items: center; .stat-info { display: flex; flex-direction: column; gap: 8px; .label { color: #94a3b8; font-size: 0.9rem; } .value { font-size: 2rem; font-weight: 700; color: white; } .value.teal { color: $teal; } .value.green { color: $green; } .value.orange { color: $orange; } .value.blue { color: $blue; } } .stat-icon-box { width: 50px; height: 50px; border-radius: 10px; display: flex; align-items: center; justify-content: center; svg { width: 24px; height: 24px; } &.teal-bg { background: rgba($teal, 0.1); color: $teal; } &.green-bg { background: rgba($green, 0.1); color: $green; } &.orange-bg { background: rgba($orange, 0.1); color: $orange; } &.blue-bg { background: rgba($blue, 0.1); color: $blue; } } } }
 .table-container { background-color: $card-bg; border-radius: 12px; border: 1px solid $border-color; overflow: hidden; .state-msg { padding: 40px; text-align: center; color: #94a3b8; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 10px; } .spinner { width: 20px; height: 20px; border: 2px solid $teal; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; } }
 table.responsive-table { width: 100%; border-collapse: collapse; min-width: 800px; thead th { text-align: left; padding: 20px; color: white; font-weight: 600; border-bottom: 1px solid $border-color; background: rgba(0,0,0,0.2); } tbody td { padding: 20px; border-bottom: 1px solid $border-color; color: #cbd5e1; font-size: 0.95rem; vertical-align: middle; } tbody tr:last-child td { border-bottom: none; } .col-time { font-family: monospace; color: #e2e8f0; } .col-img { color: $teal; cursor: pointer; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; &:hover { text-decoration: underline; } } .badge { padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; &.badge-plant { background: rgba($green, 0.15); color: $green; } &.badge-animal { background: rgba($blue, 0.15); color: $blue; } &.badge-vehicle { background: rgba($orange, 0.15); color: $orange; } } .progress-wrap { display: flex; align-items: center; gap: 15px; width: 100%; .progress-track { flex: 1; height: 6px; background-color: #334155; border-radius: 3px; overflow: hidden; .progress-fill { height: 100%; border-radius: 3px; &.green { background-color: $green; } &.blue { background-color: $blue; } &.orange { background-color: $orange; } } } .metric-val { min-width: 45px; text-align: right; color: #94a3b8; font-size: 0.9rem; } } }
