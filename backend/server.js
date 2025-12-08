@@ -16,32 +16,44 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' }));
 
-// --- MongoDB Connection ---
+// --- MongoDB Connection (Cached for Serverless) ---
+let isConnected = false;
+
 const connectDB = async () => {
+  if (isConnected) {
+    console.log('=> Using existing database connection');
+    return;
+  }
+
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    const db = await mongoose.connect(process.env.MONGODB_URI);
+    isConnected = db.connections[0].readyState;
     console.log('✅ Connected to MongoDB Atlas');
   } catch (err) {
     console.error('❌ MongoDB Connection Error:', err);
-    process.exit(1);
+    // Don't exit process in serverless, just throw
+    throw err;
   }
 };
-connectDB();
+
+// Ensure DB connects before handling requests
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
 
 // --- SCHEMAS ---
-
-// 1. User Schema
 const userSchema = new mongoose.Schema({
   fullName: String,
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   createdAt: { type: Date, default: Date.now }
 });
-const User = mongoose.model('User', userSchema);
+// Check if model exists before compiling to prevent OverwriteModelError in serverless hot reloads
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 
-// 2. Detection Schema (Linked to User)
 const detectionSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Link to user
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   timestamp: { type: Date, default: Date.now },
   imageName: String,     
   class: String,         
@@ -49,42 +61,41 @@ const detectionSchema = new mongoose.Schema({
   accuracy: Number,
   precision: Number,
 });
-const Detection = mongoose.model('Detection', detectionSchema);
+const Detection = mongoose.models.Detection || mongoose.model('Detection', detectionSchema);
 
 // --- AUTH MIDDLEWARE ---
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer <token>
+  const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) return res.status(401).json({ error: 'Access denied. Please login.' });
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ error: 'Invalid token.' });
-    req.user = user; // user contains { id: '...' }
+    req.user = user;
     next();
   });
 };
 
 // --- ROUTES ---
 
+// Root route to check if API is alive
+app.get('/api', (req, res) => {
+  res.send("API is running...");
+});
+
 // 1. SIGNUP
 app.post('/api/auth/signup', async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
-    
-    // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ error: 'Email already exists' });
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-
     const newUser = new User({ fullName, email, password: hashedPassword });
     await newUser.save();
 
-    // Generate Token
     const token = jwt.sign({ id: newUser._id }, JWT_SECRET, { expiresIn: '1h' });
-
     res.status(201).json({ message: 'User created', token, user: { fullName, email } });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -103,38 +114,33 @@ app.post('/api/auth/login', async (req, res) => {
     if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
 
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1h' });
-
     res.status(200).json({ message: 'Login successful', token, user: { fullName: user.fullName, email: user.email } });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// 3. SAVE LOG (Protected)
+// 3. SAVE LOG
 app.post('/api/detections', authenticateToken, async (req, res) => {
   try {
     const { className, confidence } = req.body;
-    
     const dateStr = new Date().toISOString().split('T')[0];
     const newDetection = new Detection({
-      userId: req.user.id, // Get ID from Token
+      userId: req.user.id,
       imageName: `Detect_${dateStr}_${Math.floor(Math.random() * 1000)}.jpg`,
       class: className,
       confidence: parseFloat(confidence),
       accuracy: parseFloat(confidence), 
       precision: (parseFloat(confidence) + (Math.random() * 2)).toFixed(1)
     });
-
     await newDetection.save();
-    console.log(`Saved for user ${req.user.id}: ${className}`);
     res.status(201).json({ message: 'Log saved', data: newDetection });
   } catch (error) {
-    console.error("Save Error:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// 4. GET HISTORY (Protected - Only get own logs)
+// 4. GET HISTORY
 app.get('/api/detections', authenticateToken, async (req, res) => {
   try {
     const logs = await Detection.find({ userId: req.user.id }).sort({ timestamp: -1 });
@@ -144,10 +150,9 @@ app.get('/api/detections', authenticateToken, async (req, res) => {
   }
 });
 
-// 5. GET CURRENT USER (New Route for Navbar)
+// 5. GET ME
 app.get('/api/auth/me', authenticateToken, async (req, res) => {
   try {
-    // Find user by ID from the token, exclude the password
     const user = await User.findById(req.user.id).select('-password');
     if (!user) return res.status(404).json({ error: 'User not found' });
     res.json(user);
@@ -156,15 +161,11 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
   }
 });
 
-// Connect to DB (Ensure this handles connection caching effectively)
-connectDB();
-
-// Only listen if running locally (not in production)
+// Only listen if running locally
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
   });
 }
 
-// Export the Express API for Vercel
 export default app;
