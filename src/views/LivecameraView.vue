@@ -18,14 +18,20 @@
         <div class="left-column">
           
           <!-- 1. Camera Feed Container -->
-          <div class="video-wrapper">
+          <div ref="videoWrapperRef" class="video-wrapper">
             
-            <!-- A. Loading / Idle Overlay -->
-            <div v-if="!isStreaming" class="video-overlay" @click="startCamera">
-              <div class="play-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg>
+            <!-- A. Camera OFF/Idle Overlay (Updated Design) -->
+            <div v-if="!isStreaming" class="camera-off-overlay">
+              <div class="camera-off-icon">
+                <!-- Icon: Crossed-out Camera -->
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M12 4.5H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h12A2.25 2.25 0 0018 18V9.75M12 4.5v7.5M12 4.5h3.75" />
+                </svg>
+                <!-- Red slash over the icon -->
+                <div class="red-slash"></div>
               </div>
-              <p>Click start to begin detection</p>
+              <p class="title-text">Camera is off</p>
+              <p class="instruction-text">Grant permissions and click "Start Camera" to begin detection.</p>
             </div>
 
             <!-- B. ANALYZING INDICATOR -->
@@ -33,11 +39,19 @@
               <div class="spinner"></div>
               <span>Analyzing...</span>
             </div>
+            
+            <!-- C. Fullscreen Button (Positioned bottom-right) -->
+            <button v-if="isStreaming" @click="toggleFullscreen" class="fullscreen-btn" :title="isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'">
+              <svg v-if="!isFullscreen" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9M20.25 20.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 10.5h.75A.75.75 0 0110.5 11.25v.75m-9 0v-.75a.75.75 0 01.75-.75h.75m0 1.5h-.75A.75.75 0 003 12.75v.75m9 0h-.75a.75.75 0 01-.75-.75v-.75m0-9h-.75A.75.75 0 0012 3v-.75m0 9h.75a.75.75 0 01.75.75v.75m9 0v-.75a.75.75 0 00-.75-.75h-.75m0-1.5h.75A.75.75 0 0121 12.75v.75m0-9h-.75a.75.75 0 00-.75.75v.75" /></svg>
+            </button>
 
-            <!-- C. Live Video Element -->
+            <!-- D. Flip Camera Button (REMOVED FROM HERE - MOVED TO CONTROLS BAR) -->
+            
+            <!-- E. Live Video Element -->
             <video ref="videoRef" autoplay playsinline muted class="live-video" :class="{ 'hidden': !isStreaming }"></video>
             
-            <!-- D. Canvas for Bounding Boxes -->
+            <!-- F. Canvas for Bounding Boxes -->
             <canvas ref="canvasRef" class="detection-canvas"></canvas>
           </div>
 
@@ -47,12 +61,20 @@
               <span v-if="!isStreaming">▷ Start Camera</span>
               <span v-else>■ Stop Camera</span>
             </button>
+            
+            <!-- NEW FLIP CAMERA BUTTON -->
+            <button v-if="isStreaming" @click="flipCamera" class="btn-secondary flip-btn" title="Flip Camera">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 7.5a4.5 4.5 0 119 0m-9 0a4.5 4.5 0 009 0M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11.25H9M12 8.25V12M15 15l-3 3-3-3" /></svg>
+              <span>Flip Camera</span>
+            </button>
+            
             <button @click="clearDetection" class="btn-secondary">
               ⟳ Clear
             </button>
           </div>
 
           <!-- 3. Live Stats Bar -->
+          <!-- ... (Stats Panel remains the same) ... -->
           <div class="stats-panel">
             <div class="stat">
               <span class="label">Active Detections</span>
@@ -75,6 +97,7 @@
         </div>
 
         <!-- ================= RIGHT COLUMN ================= -->
+        <!-- ... (Right Column remains the same) ... -->
         <aside class="right-column">
           <div class="info-card tips-card">
             <div class="card-header">
@@ -122,7 +145,7 @@
       </div>
     </main>
 
-    <!-- ================= AUTH MODAL ================= -->
+    <!-- ... (Auth Modal remains the same) ... -->
     <div v-if="showAuthModal" class="modal-overlay" @click.self="closeAuthModal">
       <div class="modal-content">
         <div class="modal-icon">
@@ -146,7 +169,7 @@
 </template>
 
 <script setup>
-import { ref, onUnmounted } from 'vue';
+import { ref, onUnmounted, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import Navbar from '../components/navbar.vue'; 
@@ -163,6 +186,7 @@ const router = useRouter();
 
 // --- State ---
 const videoRef = ref(null);
+const videoWrapperRef = ref(null);
 const canvasRef = ref(null);
 const isStreaming = ref(false);
 const detectionCount = ref(0);
@@ -170,7 +194,10 @@ const avgConfidence = ref(0);
 const statusText = ref('Ready');
 const currentFPS = ref(0);
 const isProcessing = ref(false);
-const showAuthModal = ref(false); // NEW: Controls the modal
+const showAuthModal = ref(false); 
+const isFullscreen = ref(false);
+const facingMode = ref('environment'); // 'environment' (back) or 'user' (front)
+const isMobileDevice = ref(false); // Kept for the mobile fallback logic
 
 // Internal variables
 let stream = null;
@@ -178,6 +205,32 @@ let intervalId = null;
 let lastFrameTime = 0;
 let lastSaveTime = 0;
 const SAVE_COOLDOWN = 3000;
+
+// --- Lifecycle & Fullscreen Handlers ---
+onMounted(() => {
+  // Simple mobile check
+  isMobileDevice.value = /Mobi|Android/i.test(navigator.userAgent);
+
+  // Fullscreen change listener
+  document.addEventListener('fullscreenchange', handleFullscreenChange);
+  document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+  document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+  document.addEventListener('msfullscreenchange', handleFullscreenChange);
+});
+
+onUnmounted(() => {
+  stopCamera();
+  // Remove fullscreen listeners
+  document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+  document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+  document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+});
+
+const handleFullscreenChange = () => {
+  // Check if any element is in fullscreen mode
+  isFullscreen.value = !!document.fullscreenElement;
+};
 
 // --- Modal Methods ---
 const closeAuthModal = () => {
@@ -195,24 +248,29 @@ const goToSignup = () => {
 // --- Camera Methods ---
 
 const startCamera = async () => {
-  // === UPDATED AUTH CHECK ===
+  // === AUTH CHECK ===
   const token = localStorage.getItem('userToken');
   if (!token) {
-    // Show Modal instead of Alert
     showAuthModal.value = true;
     return;
   }
 
   try {
     statusText.value = 'Initializing...';
+    // Use facingMode for camera selection
     stream = await navigator.mediaDevices.getUserMedia({ 
-      video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } },
+      video: { 
+        facingMode: facingMode.value, 
+        width: { ideal: 1280 }, 
+        height: { ideal: 720 } 
+      },
       audio: false
     });
     
     if (videoRef.value) {
       videoRef.value.srcObject = stream;
       videoRef.value.onloadedmetadata = () => {
+        // Set canvas to video dimensions
         canvasRef.value.width = videoRef.value.videoWidth;
         canvasRef.value.height = videoRef.value.videoHeight;
         isStreaming.value = true;
@@ -222,7 +280,16 @@ const startCamera = async () => {
     }
   } catch (error) {
     console.error("Error accessing webcam:", error);
-    alert("Could not access camera. Please allow permissions.");
+    
+    // Fallback logic for mobile if requested facingMode fails
+    if (error.name === "OverconstrainedError" && facingMode.value === 'environment') {
+        console.log("Environment camera failed, attempting 'user' (front) camera fallback.");
+        facingMode.value = 'user'; 
+        startCamera(); // Retry with front camera
+        return;
+    }
+
+    alert("Could not access camera. Please allow permissions. Error: " + error.name);
     statusText.value = 'Error';
   }
 };
@@ -243,11 +310,43 @@ const stopCamera = () => {
   
   const ctx = canvasRef.value?.getContext('2d');
   if (ctx) ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
+
+  // If we stop camera while in fullscreen, exit fullscreen
+  if (isFullscreen.value) {
+    toggleFullscreen();
+  }
 };
 
 const toggleCamera = () => {
   if (isStreaming.value) stopCamera();
   else startCamera();
+};
+
+const flipCamera = () => {
+  stopCamera(); // Stop current stream
+  
+  // Toggle facing mode: 'environment' -> 'user' -> 'environment'
+  facingMode.value = facingMode.value === 'environment' ? 'user' : 'environment';
+  
+  startCamera(); // Restart camera with new facing mode
+};
+
+const toggleFullscreen = () => {
+  const wrapper = videoWrapperRef.value;
+  
+  if (!document.fullscreenElement) {
+    // Enter Fullscreen
+    if (wrapper.requestFullscreen) wrapper.requestFullscreen();
+    else if (wrapper.mozRequestFullScreen) wrapper.mozRequestFullScreen();
+    else if (wrapper.webkitRequestFullscreen) wrapper.webkitRequestFullscreen();
+    else if (wrapper.msRequestFullscreen) wrapper.msRequestFullscreen();
+  } else {
+    // Exit Fullscreen
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullScreen();
+    else if (document.msExitFullscreen) document.msExitFullscreen();
+  }
 };
 
 const clearDetection = () => {
@@ -320,7 +419,7 @@ const saveToHistory = async (prediction) => {
     const token = localStorage.getItem('userToken');
     if (!token) {
         stopCamera();
-        showAuthModal.value = true; // Show modal if token expires mid-stream
+        showAuthModal.value = true;
         return;
     }
 
@@ -365,14 +464,30 @@ const renderPredictions = (predictions) => {
 
     const originalTopLeftX = x - (width / 2);
     const originalTopLeftY = y - (height / 2);
-    const mirroredTopLeftX = w - (originalTopLeftX + width);
+
+    // Apply horizontal flip if camera is 'environment' (back/default desktop) which needs mirroring for user perception.
+    // Front camera ('user') is already mirrored by video element, so it doesn't need re-flipping for the canvas.
+    const mirroredTopLeftX = facingMode.value === 'environment' || !facingMode.value
+      ? w - (originalTopLeftX + width) 
+      : originalTopLeftX;
 
     // Segmentation
     if (prediction.points && prediction.points.length > 0) {
       ctx.beginPath();
-      ctx.moveTo(w - prediction.points[0].x, prediction.points[0].y);
+      
+      const applyFlip = facingMode.value === 'environment' || !facingMode.value;
+
+      const firstX = applyFlip
+        ? w - prediction.points[0].x 
+        : prediction.points[0].x;
+
+      ctx.moveTo(firstX, prediction.points[0].y);
+
       for (let i = 1; i < prediction.points.length; i++) {
-        ctx.lineTo(w - prediction.points[i].x, prediction.points[i].y);
+        const pointX = applyFlip
+          ? w - prediction.points[i].x 
+          : prediction.points[i].x;
+        ctx.lineTo(pointX, prediction.points[i].y);
       }
       ctx.closePath();
       ctx.globalAlpha = 0.4; 
@@ -400,10 +515,6 @@ const renderPredictions = (predictions) => {
     ctx.fillText(text, mirroredTopLeftX + 5, originalTopLeftY - 7);
   });
 };
-
-onUnmounted(() => {
-  stopCamera();
-});
 </script>
 
 <style lang="scss" scoped>
@@ -433,13 +544,156 @@ $nav-height: 80px;
 .left-column { display: flex; flex-direction: column; gap: 20px; }
 .video-wrapper {
   position: relative; width: 100%; aspect-ratio: 16/9; background-color: #000; border-radius: 16px; overflow: hidden; border: 1px solid #1e293b; box-shadow: 0 0 40px rgba(0,0,0,0.5);
+  
+  // CAMERA OFF OVERLAY STYLES
+  .camera-off-overlay { 
+    position: absolute; inset: 0; 
+    display: flex; flex-direction: column; 
+    align-items: center; justify-content: center; 
+    background: #0d121c; 
+    z-index: 10; 
+    text-align: center;
+
+    .camera-off-icon {
+      position: relative;
+      width: 100px; height: 100px;
+      color: #718096; 
+      margin-bottom: 20px;
+
+      svg { width: 100px; height: 100px; stroke-width: 1.5; }
+      
+      .red-slash {
+        position: absolute;
+        top: 50%; left: 0; right: 0;
+        height: 8px;
+        background-color: #ef4444; 
+        transform: rotate(45deg);
+        border-radius: 4px;
+        z-index: 1;
+        box-shadow: 0 0 10px rgba(#ef4444, 0.5);
+      }
+    }
+
+    .title-text { 
+      color: white; 
+      font-size: 1.8rem; 
+      font-weight: 700; 
+      margin-bottom: 10px; 
+    }
+    .instruction-text { 
+      color: #94a3b8; 
+      max-width: 300px;
+      line-height: 1.5;
+    }
+  }
+
+  // Analyzing badge (positioned top-right)
   .analyzing-badge { position: absolute; top: 20px; right: 20px; background: rgba(0, 0, 0, 0.7); color: #fff; padding: 8px 16px; border-radius: 20px; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 600; z-index: 20; border: 1px solid rgba(255, 255, 255, 0.1); .spinner { width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; } }
-  .video-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); z-index: 10; cursor: pointer; .play-btn { width: 80px; height: 80px; border: 2px solid $teal; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; color: $teal; transition: all 0.3s; svg { width: 40px; height: 40px; } } p { color: #cbd5e1; } &:hover .play-btn { background: rgba($teal, 0.1); transform: scale(1.1); } }
-  .live-video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); &.hidden { display: none; } }
+  
+  // Fullscreen Button (Positioned bottom-right)
+  .fullscreen-btn {
+    position: absolute;
+    bottom: 20px; 
+    right: 20px;
+    background: rgba(0, 0, 0, 0.4);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 20;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    
+    svg { width: 20px; height: 20px; }
+
+    &:hover { background: rgba(0, 0, 0, 0.7); }
+  }
+  
+  // NOTE: .flip-camera-btn is no longer here! It's in .controls-bar
+  
+  .live-video { 
+    width: 100%; height: 100%; 
+    object-fit: cover; 
+    // Video element is mirrored by default for 'user' (front) and often 'environment' on desktop.
+    // The explicit CSS flip is removed here, and the mirroring for bounding boxes is handled in the JS/renderPredictions function, based on facingMode.
+    // For a cleaner approach: keep the video mirrored on desktop for *user-facing* experience, and let JS handle the canvas mirror logic.
+    transform: scaleX(-1); // Re-added for standard mirror on video element (desktop webcam standard)
+    &.hidden { display: none; } 
+  }
+
   .detection-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
 }
 
-.controls-bar { display: flex; gap: 15px; button { padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 1rem; } .btn-primary { background-color: $teal; color: black; border: none; &:hover { background-color: $teal-hover; } } .btn-stop { background-color: #ef4444; color: white; &:hover { background-color: #dc2626; } } .btn-secondary { background: transparent; border: 1px solid #334155; color: white; &:hover { border-color: $teal; } } }
+// FULLSCREEN STYLES
+.video-wrapper:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  aspect-ratio: unset;
+  border-radius: 0;
+  background: black;
+  
+  .live-video, .detection-canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; 
+  }
+}
+:-webkit-full-screen .video-wrapper {
+  width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0;
+}
+:-moz-full-screen .video-wrapper {
+  width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0;
+}
+:-ms-fullscreen .video-wrapper {
+  width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0;
+}
+
+
+.controls-bar { 
+  display: flex; 
+  gap: 15px; 
+  
+  button { 
+    padding: 12px 24px; 
+    border-radius: 8px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    font-size: 1rem; 
+  } 
+  
+  .btn-primary { 
+    background-color: $teal; 
+    color: black; 
+    border: none; 
+    &:hover { background-color: $teal-hover; } 
+  } 
+  
+  .btn-stop { 
+    background-color: #ef4444; 
+    color: white; 
+    &:hover { background-color: #dc2626; } 
+  } 
+  
+  .btn-secondary { 
+    background: transparent; 
+    border: 1px solid #334155; 
+    color: white; 
+    &:hover { border-color: $teal; } 
+    
+    // Make flip-btn text smaller/less prominent if needed, but keeping it standard for now.
+    &.flip-btn {
+        svg { width: 20px; height: 20px; } // Adjust icon size to fit better
+    }
+  } 
+}
 .stats-panel { display: grid; grid-template-columns: repeat(4, 1fr); background-color: #0a0a0a; padding: 20px; border-radius: 12px; border: 1px solid #1e293b; .stat { display: flex; flex-direction: column; gap: 5px; border-right: 1px solid #1e293b; padding-left: 20px; &:last-child { border-right: none; } &:first-child { padding-left: 0; } .label { color: #94a3b8; font-size: 0.9rem; } .value { font-size: 1.5rem; font-weight: 700; color: white; } .value.teal { color: $teal; } .value.green { color: $green; } .value.text-gray { color: #64748b; font-size: 1.2rem; } } @media (max-width: 768px) { grid-template-columns: 1fr 1fr; gap: 20px; .stat { border-right: none; padding-left: 0; } } }
 .right-column { display: flex; flex-direction: column; gap: 20px; }
 .info-card { background-color: $card-bg; border-radius: 12px; padding: 20px; border: 1px solid #1e293b; }
@@ -489,22 +743,21 @@ $nav-height: 80px;
     
     .full-width { width: 100%; justify-content: center; }
     
-    // === NEW STYLING FOR LOGIN BUTTON ===
     .btn-primary {
-      background-color: $teal;  /* Teal Background */
-      color: #000000;           /* Black Text */
+      background-color: $teal;  
+      color: #000000;           
       border: none;
       padding: 12px;
       border-radius: 8px;
-      font-weight: 700;         /* Bolder text */
+      font-weight: 700;         
       font-size: 1rem;
       cursor: pointer;
       transition: all 0.2s ease;
       
       &:hover { 
         background-color: $teal-hover; 
-        transform: translateY(-1px); /* Slight lift effect */
-        box-shadow: 0 4px 12px rgba($teal, 0.3); /* Glow effect */
+        transform: translateY(-1px); 
+        box-shadow: 0 4px 12px rgba($teal, 0.3); 
       }
     }
 
