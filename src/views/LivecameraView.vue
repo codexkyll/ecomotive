@@ -95,6 +95,7 @@
 
         <!-- ================= RIGHT COLUMN ================= -->
         <aside class="right-column">
+          <!-- ... (Info cards and system details) ... -->
           <div class="info-card tips-card">
             <div class="card-header">
               <span class="icon-info">!</span>
@@ -204,10 +205,8 @@ const SAVE_COOLDOWN = 3000;
 
 // --- Lifecycle & Fullscreen Handlers ---
 onMounted(() => {
-  // Simple mobile check
   isMobileDevice.value = /Mobi|Android/i.test(navigator.userAgent);
 
-  // Fullscreen change listener
   document.addEventListener('fullscreenchange', handleFullscreenChange);
   document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
   document.addEventListener('mozfullscreenchange', handleFullscreenChange);
@@ -216,7 +215,6 @@ onMounted(() => {
 
 onUnmounted(() => {
   stopCamera();
-  // Remove fullscreen listeners
   document.removeEventListener('fullscreenchange', handleFullscreenChange);
   document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
   document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
@@ -224,27 +222,12 @@ onUnmounted(() => {
 });
 
 const handleFullscreenChange = () => {
-  // Check if any element is in fullscreen mode
   isFullscreen.value = !!document.fullscreenElement;
-};
-
-// --- Modal Methods ---
-const closeAuthModal = () => {
-  showAuthModal.value = false;
-};
-
-const goToLogin = () => {
-  router.push('/login');
-};
-
-const goToSignup = () => {
-  router.push('/signup');
 };
 
 // --- Camera Methods ---
 
 const startCamera = async () => {
-  // === AUTH CHECK ===
   const token = localStorage.getItem('userToken');
   if (!token) {
     showAuthModal.value = true;
@@ -253,20 +236,26 @@ const startCamera = async () => {
 
   try {
     statusText.value = 'Initializing...';
-    // Use facingMode for camera selection
-    stream = await navigator.mediaDevices.getUserMedia({ 
-      video: { 
-        facingMode: facingMode.value, 
-        width: { ideal: 1280 }, 
-        height: { ideal: 720 } 
-      },
-      audio: false
-    });
+    
+    // NEW: Use reversed ideal resolution (e.g., 720x1280) for a portrait-optimized initial stream on mobile, 
+    // while keeping the existing high resolution for desktop.
+    const constraints = isMobileDevice.value 
+      ? { 
+          facingMode: facingMode.value, 
+          width: { ideal: 720 }, 
+          height: { ideal: 1280 } 
+        }
+      : { 
+          facingMode: facingMode.value, 
+          width: { ideal: 1280 }, 
+          height: { ideal: 720 } 
+        };
+
+    stream = await navigator.mediaDevices.getUserMedia({ video: constraints, audio: false });
     
     if (videoRef.value) {
       videoRef.value.srcObject = stream;
       videoRef.value.onloadedmetadata = () => {
-        // Set canvas to video dimensions
         canvasRef.value.width = videoRef.value.videoWidth;
         canvasRef.value.height = videoRef.value.videoHeight;
         isStreaming.value = true;
@@ -277,11 +266,11 @@ const startCamera = async () => {
   } catch (error) {
     console.error("Error accessing webcam:", error);
     
-    // Fallback logic for mobile if requested facingMode fails
+    // Fallback logic
     if (error.name === "OverconstrainedError" && facingMode.value === 'environment') {
         console.log("Environment camera failed, attempting 'user' (front) camera fallback.");
         facingMode.value = 'user'; 
-        startCamera(); // Retry with front camera
+        startCamera(); 
         return;
     }
 
@@ -307,7 +296,6 @@ const stopCamera = () => {
   const ctx = canvasRef.value?.getContext('2d');
   if (ctx) ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
 
-  // If we stop camera while in fullscreen, exit fullscreen
   if (isFullscreen.value) {
     toggleFullscreen();
   }
@@ -319,12 +307,9 @@ const toggleCamera = () => {
 };
 
 const flipCamera = () => {
-  stopCamera(); // Stop current stream
-  
-  // Toggle facing mode: 'environment' (back) <-> 'user' (front)
+  stopCamera(); 
   facingMode.value = facingMode.value === 'environment' ? 'user' : 'environment';
-  
-  startCamera(); // Restart camera with new facing mode
+  startCamera(); 
 };
 
 const toggleFullscreen = () => {
@@ -345,14 +330,13 @@ const toggleFullscreen = () => {
   }
 };
 
+// --- Detection Loop and Render Functions (No functional changes needed here) ---
 const clearDetection = () => {
   detectionCount.value = 0;
   avgConfidence.value = 0;
   const ctx = canvasRef.value?.getContext('2d');
   if (ctx) ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
 };
-
-// --- Detection Loop and Render Functions (No functional changes needed here) ---
 
 const captureAndDetect = async () => {
   if (!isStreaming.value || !videoRef.value || !canvasRef.value || isProcessing.value) return;
@@ -459,7 +443,7 @@ const renderPredictions = (predictions) => {
     const originalTopLeftX = x - (width / 2);
     const originalTopLeftY = y - (height / 2);
 
-    const applyFlip = facingMode.value === 'environment' || !facingMode.value; // Mirror back-facing camera predictions
+    const applyFlip = facingMode.value === 'environment' || !facingMode.value; 
     const mirroredTopLeftX = applyFlip
       ? w - (originalTopLeftX + width) 
       : originalTopLeftX;
@@ -596,7 +580,7 @@ $nav-height: 80px;
     padding: 10px;
     border-radius: 50%;
     cursor: pointer;
-    z-index: 30; // Increased Z-index to ensure it's clickable on top of video/canvas layers
+    z-index: 99; // INCREASED Z-INDEX FOR MOBILE CLICKABILITY
     width: 40px;
     height: 40px;
     display: flex;
@@ -619,11 +603,13 @@ $nav-height: 80px;
   .detection-canvas { 
     position: absolute; top: 0; left: 0; 
     width: 100%; height: 100%; 
-    pointer-events: none; // Crucial for clicking the fullscreen button below it
+    pointer-events: none; 
   }
 }
 
-// FULLSCREEN STYLES (unchanged)
+// ===================================
+// FULLSCREEN STYLES (UPDATED FOR PORTRAIT MOBILE)
+// ===================================
 .video-wrapper:fullscreen {
   width: 100vw;
   height: 100vh;
@@ -631,16 +617,27 @@ $nav-height: 80px;
   border-radius: 0;
   background: black;
   
+  // Force video and canvas to cover the full screen
   .live-video, .detection-canvas {
     width: 100%;
     height: 100%;
-    object-fit: contain; 
+    object-fit: cover; // USE COVER to fill the screen (cropping if needed)
+    aspect-ratio: unset;
   }
 }
-// Vendor-prefixed fullscreen styles (unchanged)
-:-webkit-full-screen .video-wrapper { width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0; }
-:-moz-full-screen .video-wrapper { width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0; }
-:-ms-fullscreen .video-wrapper { width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0; }
+// Vendor-prefixed fullscreen styles
+:-webkit-full-screen .video-wrapper {
+  width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0;
+  .live-video, .detection-canvas { object-fit: cover; aspect-ratio: unset; }
+}
+:-moz-full-screen .video-wrapper {
+  width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0;
+  .live-video, .detection-canvas { object-fit: cover; aspect-ratio: unset; }
+}
+:-ms-fullscreen .video-wrapper {
+  width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0;
+  .live-video, .detection-canvas { object-fit: cover; aspect-ratio: unset; }
+}
 
 
 // ===================================
@@ -652,12 +649,11 @@ $nav-height: 80px;
   gap: 15px; 
   
   @media (max-width: 600px) {
-    flex-wrap: wrap; // Allow buttons to wrap to the next line on mobile
+    flex-wrap: wrap; 
     
-    // Ensure buttons take up equal space as shown in image
     .btn-primary, .btn-secondary {
-        flex: 1 1 auto; // Allow growing/shrinking
-        min-width: 30%; // Prevent them from getting too small
+        flex: 1 1 auto; 
+        min-width: 30%; 
         text-align: center;
     }
   }
@@ -669,7 +665,7 @@ $nav-height: 80px;
     cursor: pointer; 
     display: flex; 
     align-items: center; 
-    justify-content: center; // Center content in the flex container
+    justify-content: center; 
     gap: 8px; 
     font-size: 1rem; 
   } 
@@ -686,12 +682,12 @@ $nav-height: 80px;
     &.flip-btn svg { width: 20px; height: 20px; }
   } 
 
-  // Mobile-specific button appearance (to match image)
+  // Mobile-specific button appearance
   @media (max-width: 600px) {
     .btn-secondary {
       padding: 10px 15px; 
       font-size: 0.9rem;
-      flex-direction: column; // Stack icon and text
+      flex-direction: column; 
       gap: 2px;
     }
 
