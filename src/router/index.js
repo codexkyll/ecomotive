@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import DashboardView from '../views/DashboardView.vue'
 import ModelInfoView from '../views/ModelInfoView.vue'
-import LivecameraView from '@/views/LivecameraView.vue'
-import HistoryView from '@/views/HistoryView.vue'
-import AboutView from '@/views/AboutView.vue'
-import SignupView from '@/views/SignupView.vue'
-import LoginView from '@/views/LoginView.vue'
+import LivecameraView from '../views/LivecameraView.vue' // Ensure casing matches filename
+import HistoryView from '../views/HistoryView.vue'
+import AboutView from '../views/AboutView.vue'
+import SignupView from '../views/SignupView.vue'
+import LoginView from '../views/LoginView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -23,12 +23,14 @@ const router = createRouter({
     {
       path: '/live-camera',
       name: 'live-camera',
-      component: LivecameraView
+      component: LivecameraView,
+      meta: { requiresAuth: true } // Protect this route
     },
     {
       path: '/history',
       name: 'history',
-      component: HistoryView
+      component: HistoryView,
+      meta: { requiresAuth: true } // Protect this route
     },
     {
       path: '/about-us',
@@ -45,8 +47,20 @@ const router = createRouter({
       name: 'login',
       component: LoginView
     },
-   
   ]
 })
+
+// --- Navigation Guard ---
+// Checks if the user is logged in before accessing protected pages
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('userToken');
+
+  if (to.meta.requiresAuth && !token) {
+    // If trying to access a protected page without a token, go to login
+    next('/login');
+  } else {
+    next();
+  }
+});
 
 export default router

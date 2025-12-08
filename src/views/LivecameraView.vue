@@ -155,7 +155,7 @@ import Navbar from '../components/navbar.vue';
 const API_KEY = import.meta.env.VITE_ROBOFLOW_PRIVATE_API_KEY;
 const MODEL_ID = import.meta.env.VITE_ROBOFLOW_MODEL_ID;
 const VERSION = import.meta.env.VITE_ROBOFLOW_VERSION;
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const BACKEND_URL = import.meta.env.PROD ? '/api/detections' : 'http://localhost:5000/api/detections';
 
 const MODEL_ENDPOINT = `https://detect.roboflow.com/${MODEL_ID}/${VERSION}`;
 
