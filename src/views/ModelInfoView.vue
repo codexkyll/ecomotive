@@ -117,23 +117,23 @@ import Navbar from '../components/navbar.vue'; // IMPORT NAVBAR
 // --- Data Content ---
 const detectionClasses = ref([
   {
-    title: 'Plant',
-    description: 'Detects and segments leaves, flowers, bushes, and groups of plants in various environments.',
-    items: ['Leaves and foliage', 'Flowers and blooms', 'Bushes and trees', 'Plant groups'],
+    title: 'Plants',
+    description: 'The model finds and outlines many types of plants, including flowers and bushes, even when they look similar to other objects.',
+    items: ['Leaves and general greenery', 'Flowers (like Bougainvillea)', 'Objects near and far', 'Works well in cluttered areas'],
     icon: 'plant',
     color: 'green'
   },
   {
-    title: 'Animal',
-    description: 'Recognizes various animal species with different shapes and textures from multiple angles.',
-    items: ['Marine mammals', 'Land animals', 'Birds', 'Multiple angles'],
+    title: 'Animals',
+    description: 'This class detects and segments specific animals like penguins, seals, and otters in different natural settings.',
+    items: ['Specific animals: Penguins, Seals, Otters', 'Works in water, land, and shaded areas', 'Handles different light and shadows', 'Recognizes objects from many angles'],
     icon: 'animal',
     color: 'blue'
   },
   {
-    title: 'Vehicle',
-    description: 'Detects and segments cars, motorcycles, buses, and other vehicles in real-world scenes.',
-    items: ['Cars', 'Motorcycles', 'Buses', 'Various angles'],
+    title: 'Vehicles',
+    description: 'Accurately tracks and segments different vehicles such as buses, vans, and motorcycles, even when they are partly hidden.',
+    items: ['Buses, Vans, and Cars', 'Motorcycles and Tricycles', 'Works when objects are partly blocked or hidden', 'Works in bright, dim, and nighttime scenes'],
     icon: 'vehicle',
     color: 'orange'
   }
@@ -141,33 +141,43 @@ const detectionClasses = ref([
 
 const capabilities = ref([
   {
-    title: 'Lighting Tolerance',
-    icon: 'bolt',
-    items: ['Bright daylight conditions', 'Low-light environments', 'Nighttime scenarios', 'Shadowed areas']
+    title: 'Precision and High Accuracy',
+    icon: 'shield',
+    items: [
+      'Accurate outlines of objects using precise polygon masks.',
+      'Achieves an overall 96.4% prediction accuracy.',
+      'Gives much higher confidence scores for hard to see objects (e.g., increased from 45.8% to 94.7% for a hidden van).',
+      'Ignores background distractions and visual clutter.'
+    ]
   },
   {
-    title: 'Robust Detection',
-    icon: 'shield',
-    items: ['Partial occlusion handling', 'Objects behind obstacles', 'Real-world messy environments', 'Multiple viewpoints']
+    title: 'Reliable in Real-World Conditions',
+    icon: 'bolt',
+    items: [
+      'Consistent accuracy in bright light, dim settings, and heavy shadows.',
+      'Handles objects that are partly blocked or hidden from view.',
+      'Continuously improves using a live feedback loop for errors.',
+      'No longer confuses plants with vehicles, which was a major early issue.'
+    ]
   }
 ]);
 
 const limitations = ref([
   {
-    title: 'Distance & Size',
-    text: 'Objects must be close enough to the camera for accurate detection. Very distant subjects may result in misclassification or detection failure.'
+    title: 'Object Distance and Size',
+    text: 'Objects that are very far away and appear very small in the image may be missed or incorrectly identified.'
   },
   {
-    title: 'Animal Specificity',
-    text: 'Model is trained primarily on aquatic mammals, seals, and penguins. Other animal types may have lower confidence scores.'
+    title: 'Specific Animal Types',
+    text: 'The model is best at recognizing the animals it was trained on: penguins, seals, and otters. Other types of animals might have lower detection scores.'
   },
   {
-    title: 'Motion Blur',
-    text: 'Fast camera movement causes motion blur, which can lead to mislabeling. Keep the camera relatively steady during detection.'
+    title: 'Movement and Blur',
+    text: 'Images with fast motion blur (from movement or unsteady camera) can cause the model to make errors. Use a steady camera for best results.'
   },
   {
-    title: 'Hardware Quality',
-    text: 'Lower quality webcams (720p or grainy) produce visual noise that mimics failure cases. Use decent quality camera for best results.'
+    title: 'Image Quality',
+    text: 'Low quality or grainy camera feeds can introduce visual noise that makes the model unreliable. Use a good quality camera for optimal performance.'
   }
 ]);
 </script>

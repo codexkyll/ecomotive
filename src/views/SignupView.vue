@@ -9,9 +9,6 @@
       <!-- Left: Marketing / Value Prop -->
       <div class="left-panel animate-fade-in">
         <div class="brand-box">
-          <div class="leaf-icon">
-             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.854 1.566-2.126a4.854 4.854 0 00-1.481-4.498 8.458 8.458 0 014.654 9.773l-1.009 2.595a.75.75 0 01-1.393-.114 9.876 9.876 0 00-1.652-3.693 1.168 1.168 0 01-.685-1.74zM9.75 18v-.192c0-.983-.658-1.854-1.566-2.126a4.854 4.854 0 011.481-4.498 8.458 8.458 0 00-4.654 9.773l1.009 2.595a.75.75 0 001.393-.114 9.876 9.876 0 011.652-3.693 1.168 1.168 0 00.685-1.74z" /></svg>
-          </div>
           <h1>Join <br>EcoMotive</h1>
           <p class="description">
             Get started with advanced plant, animal, and vehicle detection using our Roboflow-powered segmentation model.
@@ -31,7 +28,8 @@
       <div class="right-panel">
         <div class="auth-card">
           <h2>Create Account</h2>
-          <p class="subtitle">Sign up to start detecting with AI</p>
+          <!-- REMOVED 'with AI' -->
+          <p class="subtitle">Sign up to start detecting</p>
 
           <form @submit.prevent="handleSignup">
              <div class="form-group">
@@ -61,17 +59,13 @@
             <div class="form-group">
               <label>Confirm Password</label>
               <div class="input-wrapper">
-                <span class="input-icon">🛡️</span>
+                <!-- CHANGED ICON from 🛡️ to 🔒 -->
+                <span class="input-icon">🔒</span>
                 <input type="password" v-model="confirmPassword" placeholder="••••••••" required />
               </div>
             </div>
 
             <button type="submit" class="btn-primary">Create Account</button>
-            
-            <button type="button" class="btn-google">
-              <svg class="google-icon" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg"><g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)"><path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z"/><path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L -10.684 57.329 C -11.764 58.049 -13.134 58.489 -14.754 58.489 C -17.884 58.489 -20.534 56.379 -21.484 53.529 L -25.464 53.529 L -25.464 56.619 C -23.494 60.539 -19.444 63.239 -14.754 63.239 Z"/><path fill="#FBBC05" d="M -21.484 53.529 C -21.734 52.809 -21.864 52.039 -21.864 51.239 C -21.864 50.439 -21.734 49.669 -21.484 48.949 L -21.484 45.859 L -25.464 45.859 C -26.284 47.479 -26.754 49.299 -26.754 51.239 C -26.754 53.179 -26.284 54.999 -25.464 56.619 L -21.484 53.529 Z"/><path fill="#EA4335" d="M -14.754 43.989 C -12.984 43.989 -11.404 44.599 -10.154 45.789 L -6.734 42.369 C -8.804 40.429 -11.514 39.239 -14.754 39.239 C -19.444 39.239 -23.494 41.939 -25.464 45.859 L -21.484 48.949 C -20.534 46.099 -17.884 43.989 -14.754 43.989 Z"/></g></svg>
-              Sign up with Google
-            </button>
 
             <div class="divider">
               <span>Already have an account?</span>
@@ -148,7 +142,6 @@ $teal-hover: #2dd4bf;
   min-height: 100vh;
   font-family: 'Inter', sans-serif;
   
-  /* THIS MATCHES ABOUT VIEW EXACTLY */
   padding: 0 5%; 
   overflow-x: hidden;
 }
@@ -159,7 +152,6 @@ $teal-hover: #2dd4bf;
   grid-template-columns: 1fr 1fr;
   max-width: 1200px;
   margin: 20px auto 60px;
-  /* Removed side padding here because container handles it now */
   gap: 60px;
   align-items: center;
   min-height: calc(100vh - 160px);
@@ -177,16 +169,7 @@ $teal-hover: #2dd4bf;
 .left-panel {
   .brand-box { max-width: 500px; }
   
-  .leaf-icon {
-    width: 64px; height: 64px; 
-    background: rgba($teal, 0.1); 
-    color: $teal;
-    border: 1px solid rgba($teal, 0.2);
-    border-radius: 16px; 
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 30px;
-    svg { width: 32px; height: 32px; }
-  }
+  /* REMOVED .leaf-icon CSS */
 
   h1 { font-size: 3.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 20px; color: white; }
   .description { color: #94a3b8; font-size: 1.1rem; line-height: 1.6; margin-bottom: 40px; }
@@ -213,7 +196,8 @@ $teal-hover: #2dd4bf;
   padding: 40px;
   border-radius: 20px;
   width: 100%;
-  max-width: 480px;
+  // INCREASED MAX-WIDTH
+  max-width: 500px; 
   border: 1px solid $border-color;
   box-shadow: 0 20px 40px rgba(0,0,0,0.4);
 
@@ -230,7 +214,8 @@ $teal-hover: #2dd4bf;
         width: 100%; 
         background: #020617; 
         border: 1px solid #334155;
-        padding: 12px 12px 12px 45px; 
+        // ADJUSTED PADDING to match height of original design
+        padding: 14px 12px 14px 45px; 
         border-radius: 8px; 
         color: white; 
         font-size: 1rem;
@@ -253,10 +238,7 @@ $teal-hover: #2dd4bf;
     &:hover { background-color: $teal-hover; }
   }
   
-  .btn-google {
-    background: transparent; color: white; border: 1px solid #334155; display: flex; align-items: center; justify-content: center; gap: 10px;
-    &:hover { background: rgba(255,255,255,0.05); border-color: #cbd5e1; }
-  }
+  /* REMOVED .btn-google CSS */
 
   .divider {
     text-align: center; margin: 25px 0; border-top: 1px solid #334155; position: relative;

@@ -8,9 +8,8 @@
       <!-- Left Column: Branding & Info -->
       <div class="left-panel animate-fade-in">
         <div class="brand-box">
-          <div class="leaf-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.854 1.566-2.126a4.854 4.854 0 00-1.481-4.498 8.458 8.458 0 014.654 9.773l-1.009 2.595a.75.75 0 01-1.393-.114 9.876 9.876 0 00-1.652-3.693 1.168 1.168 0 01-.685-1.74zM9.75 18v-.192c0-.983-.658-1.854-1.566-2.126a4.854 4.854 0 011.481-4.498 8.458 8.458 0 00-4.654 9.773l1.009 2.595a.75.75 0 001.393-.114 9.876 9.876 0 011.652-3.693 1.168 1.168 0 00.685-1.74z" /></svg>
-          </div>
+          
+          <!-- REMOVED LOGO -->
           <h1>Welcome to <br>EcoMotive</h1>
           <p class="description">
             Access your detection dashboard and continue monitoring plants, animals, and vehicles with our advanced segmentation model.
@@ -54,9 +53,7 @@
               {{ isLoading ? 'Signing In...' : 'Sign In' }}
             </button>
             
-            <button type="button" class="btn-google">
-              Sign in with Google
-            </button>
+            <!-- REMOVED SIGN IN WITH GOOGLE BUTTON -->
 
             <div class="divider">
               <span>Don't have an account?</span>
@@ -161,29 +158,26 @@ $green: #22c55e;
 
 /* --- Left Panel (Marketing) --- */
 .left-panel {
+  // Reverted to original dark background styling
+  padding: 0; // Removed extra padding from gradient change
+  border-radius: 0; // Removed border-radius from gradient change
+  box-shadow: none; // Removed box-shadow from gradient change
+  color: $text-color; // Restored text color for dark background
+
   .brand-box { max-width: 500px; }
   
-  .leaf-icon {
-    width: 64px; height: 64px; 
-    background: rgba($teal, 0.1); 
-    color: $teal;
-    border: 1px solid rgba($teal, 0.2);
-    border-radius: 16px; 
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 30px;
-    svg { width: 32px; height: 32px; }
-  }
+  /* REMOVED .leaf-icon CSS */
 
-  h1 { font-size: 3.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 20px; color: white; }
-  .description { color: #94a3b8; font-size: 1.1rem; line-height: 1.6; margin-bottom: 40px; }
+  h1 { font-size: 3.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 20px; color: white; } // Restored color
+  .description { color: #94a3b8; font-size: 1.1rem; line-height: 1.6; margin-bottom: 40px; } // Restored color
   
   .features {
-    .features-title { font-weight: 700; color: white; margin-bottom: 15px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; }
+    .features-title { font-weight: 700; color: white; margin-bottom: 15px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; } // Restored color
     ul { 
       list-style: none; padding: 0; 
       li { 
-        position: relative; padding-left: 25px; margin-bottom: 12px; color: #cbd5e1; font-size: 1rem;
-        &::before { content: '✓'; color: $teal; position: absolute; left: 0; font-weight: bold; }
+        position: relative; padding-left: 25px; margin-bottom: 12px; color: #cbd5e1; font-size: 1rem; // Restored color
+        &::before { content: '✓'; color: $teal; position: absolute; left: 0; font-weight: bold; } // Restored checkmark color
       }
     }
   }
@@ -240,10 +234,7 @@ $green: #22c55e;
     &:hover:not(:disabled) { background-color: $teal-hover; }
   }
   
-  .btn-google {
-    background: transparent; color: white; border: 1px solid #334155; display: flex; align-items: center; justify-content: center; gap: 10px;
-    &:hover { background: rgba(255,255,255,0.05); border-color: #cbd5e1; }
-  }
+  /* REMOVED .btn-google CSS */
 
   .divider {
     text-align: center; margin: 25px 0; border-top: 1px solid #334155; position: relative;

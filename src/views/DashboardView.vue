@@ -19,13 +19,15 @@
           <span class="highlight-orange">& Vehicles</span>
         </h1>
         <p class="description">
-          Advanced instance segmentation platform using Roboflow's state-of-the-art model 
-          to identify and segment plants, animals, and vehicles in real-world environments.
+          Advanced instance segmentation, powered by a meticulously fine-tuned model and precise segmentation masks. 
+          Experience robust, high-confidence detection of plants, animals, and vehicles, validated across the most
+          challenging real-world scenarios.
         </p>
         
         <div class="cta-group">
-          <button class="primary-btn">Learn About Model</button> 
-          <button @click="handleStartDetection" class="secondary-btn">Start Detection</button>
+          <!-- <button class="primary-btn" >Learn About Model</button>  -->
+          <router-link to="/model-info" class="primary-btn" style="text-decoration: none; ">Learn About Model</router-link>
+          <router-link to="/live-camera" class="secondary-btn" style="text-decoration: none; ">Start Detection</router-link>
         </div>
       </div>
 
@@ -58,15 +60,13 @@
     <!-- ============================================ -->
     <section class="details-section">
       <div class="text-block">
-        <h2>Detection Capabilities</h2>
+        <!-- TITLE CHANGED -->
+        <h2>Making Sense of the Real World</h2>
+        <!-- PARAGRAPH CHANGED -->
         <p>
-          Our Roboflow model detects three primary classes with instance segmentation for precise object boundaries.
+          Our segmentation model offers intelligent data for various applications, turning raw visual input into actionable insights for Plant, Animal, and Vehicle recognition.
         </p>
-        <ul class="feature-list">
-           <li><strong>Plant Detection:</strong> Accurately identify and segment plants and flowers.</li>
-           <li><strong>Animal Recognition:</strong> Detect species like Penguins, Seals, and Otters.</li>
-           <li><strong>Vehicle Tracking:</strong> Monitor buses, vans, and motorcycles in real-time.</li>
-        </ul>
+        <!-- Removed bullet descriptions: ul.feature-list -->
       </div>
 
       <!-- Capabilities Cards Grid -->
@@ -102,7 +102,8 @@
         <p class="cta-text">
           Sign up today and start detecting plants, animals, and vehicles in real-time with our advanced Roboflow model.
         </p>
-        <button class="primary-btn cta-btn">Get Started Free</button>
+        <router-link to="/signup" class="primary-btn cta-btn" style="text-decoration: none;">Get Started Free</router-link>
+
       </div>
     </section>
 
@@ -115,26 +116,27 @@ import Navbar from '../components/navbar.vue'; // IMPORTED HERE
 
 const capabilities = ref([
   {
-    title: 'Plant Detection',
-    description: 'Accurately identify and segment plants, flowers (Bougainvillea), and vegetation.',
+    title: 'Ecological Monitoring',
+    description: 'Empower agricultural drones and environmental systems with precise monitoring of crop health, species population, and ecological changes.',
     icon: 'plant',
     colorClass: 'green'
   },
   {
-    title: 'Animal Recognition',
-    description: 'Detect various species like Penguins, Seals, and Otters with precise segmentation.',
+    title: 'Wildlife Conservation',
+    description: 'Facilitate critical wildlife and habitat monitoring for conservation efforts, enabling real-time counting and tracking of endangered species.',
     icon: 'animal',
     colorClass: 'blue'
   },
   {
-    title: 'Vehicle Tracking',
-    description: 'Monitor vehicles including buses, vans, and motorcycles in real-time environments.',
+    title: 'Smart Traffic Analysis',
+    description: 'Optimize urban planning and traffic flow for Smart Cities by providing real-time data on vehicle counts, congestion, and incident response.',
     icon: 'vehicle',
     colorClass: 'orange' 
   },
   {
-    title: 'Real-time Segmentation',
-    description: 'Powered by Roboflow\'s YOLO instance segmentation with 96.4% accuracy.',
+    title: 'High-Precision Segmentation',
+    // DESCRIPTION REPHRASED
+    description: 'Ensures fast, precise instance segmentation and accurate object boundaries in real world scenarios, supporting quick and reliable decisions.',
     icon: 'bolt',
     colorClass: 'teal'
   }
@@ -209,7 +211,26 @@ $orange: #f59e0b;
 /* --- 4. Details Section --- */
 .details-section {
   padding: 40px 0 80px; max-width: 1200px; margin: 0 auto;
-  .text-block { margin-bottom: 50px; h2 { font-size: 1.5rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; } p { color: #94a3b8; max-width: 700px; margin-bottom: 20px; } .feature-list { list-style: none; padding: 0; li { margin-bottom: 10px; color: #cbd5e1; &::before { content: "•"; color: $teal; font-weight: bold; display: inline-block; width: 1em; } } } }
+  .text-block { 
+    margin-bottom: 50px; 
+    text-align: center; /* ADDED: Center alignment */
+
+    h2 { 
+      font-size: 2.5rem; /* CHANGED: from 1.5rem to 2.5rem (Bigger) */
+      color: $text-color; /* CHANGED: from #64748b to $text-color (Prominence) */
+      text-transform: uppercase; 
+      letter-spacing: 1px; 
+      margin-bottom: 20px; 
+    } 
+    
+    p { 
+      font-size: 1.1rem; /* ADDED: To make it bigger */
+      color: #94a3b8; 
+      max-width: 800px; /* CHANGED: from 700px to 800px (Wider) */
+      margin: 0 auto 20px; /* CHANGED: Added 'auto' to center the text */
+    } 
+    /* REMOVED .feature-list STYLES */
+  }
 
   .cards-grid {
     display: grid;

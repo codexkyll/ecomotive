@@ -9,7 +9,7 @@
       <!-- ================= HEADER ================= -->
       <section class="page-header">
         <h1>Live Detection</h1>
-        <p class="subtitle">Real-time object detection with AI-powered analysis</p>
+        <p class="subtitle">Real-time object classification and segmentation for immediate insights into Plants, Animals, and Vehicles.</p>
       </section>
 
       <div class="content-grid">
@@ -20,14 +20,12 @@
           <!-- 1. Camera Feed Container -->
           <div ref="videoWrapperRef" class="video-wrapper">
             
-            <!-- A. Camera OFF/Idle Overlay (Updated Design) -->
+            <!-- A. Camera OFF/Idle Overlay -->
             <div v-if="!isStreaming" class="camera-off-overlay">
               <div class="camera-off-icon">
-                <!-- Icon: Crossed-out Camera -->
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M12 4.5H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h12A2.25 2.25 0 0018 18V9.75M12 4.5v7.5M12 4.5h3.75" />
                 </svg>
-                <!-- Red slash over the icon -->
                 <div class="red-slash"></div>
               </div>
               <p class="title-text">Camera is off</p>
@@ -40,34 +38,45 @@
               <span>Analyzing...</span>
             </div>
             
-            <!-- C. Fullscreen Button (Positioned bottom-right) -->
-            <button v-if="isStreaming" @click="toggleFullscreen" class="fullscreen-btn" :title="isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'">
-              <svg v-if="!isFullscreen" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9M20.25 20.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>
-              <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 10.5h.75A.75.75 0 0110.5 11.25v.75m-9 0v-.75a.75.75 0 01.75-.75h.75m0 1.5h-.75A.75.75 0 003 12.75v.75m9 0h-.75a.75.75 0 01-.75-.75v-.75m0-9h-.75A.75.75 0 0012 3v-.75m0 9h.75a.75.75 0 01.75.75v.75m9 0v-.75a.75.75 0 00-.75-.75h-.75m0-1.5h.75A.75.75 0 0121 12.75v.75m0-9h-.75a.75.75 0 00-.75.75v.75" /></svg>
+            <!-- C. EXIT FULLSCREEN BUTTON (Middle Center Bottom - Only visible in Fullscreen) -->
+            <button v-if="isFullscreen" @click="toggleFullscreen" class="exit-fullscreen-overlay-btn" title="Exit Fullscreen">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
             
-            <!-- E. Live Video Element -->
+            <!-- D. Live Video Element -->
             <video ref="videoRef" autoplay playsinline muted class="live-video" :class="{ 'hidden': !isStreaming }"></video>
             
-            <!-- F. Canvas for Bounding Boxes -->
+            <!-- E. Canvas for Bounding Boxes -->
             <canvas ref="canvasRef" class="detection-canvas"></canvas>
           </div>
 
           <!-- 2. Controls -->
           <div class="controls-bar">
+            <!-- Start/Stop -->
             <button @click="toggleCamera" class="btn-primary" :class="{ 'btn-stop': isStreaming }">
               <span v-if="!isStreaming">▷ Start Camera</span>
               <span v-else>■ Stop Camera</span>
             </button>
             
-            <!-- FLIP CAMERA BUTTON -->
+            <!-- Flip Camera -->
             <button v-if="isStreaming" @click="flipCamera" class="btn-secondary flip-btn" title="Flip Camera">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 7.5a4.5 4.5 0 119 0m-9 0a4.5 4.5 0 009 0M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11.25H9M12 8.25V12M15 15l-3 3-3-3" /></svg>
-              <span>Flip Camera</span>
+              <span>Flip</span>
             </button>
             
+            <!-- Clear -->
             <button @click="clearDetection" class="btn-secondary">
               ⟳ Clear
+            </button>
+
+            <!-- Fullscreen (Moved here) -->
+            <button v-if="isStreaming" @click="toggleFullscreen" class="btn-secondary" title="Enter Fullscreen">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px; height:20px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9M20.25 20.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+              </svg>
+              <span>Fullscreen</span>
             </button>
           </div>
 
@@ -95,16 +104,16 @@
 
         <!-- ================= RIGHT COLUMN ================= -->
         <aside class="right-column">
-          <!-- ... (Info cards and system details) ... -->
+          <!-- Info cards -->
           <div class="info-card tips-card">
             <div class="card-header">
               <span class="icon-info">!</span>
               <h3>Tips for Best Results</h3>
             </div>
             <ul>
-              <li>Ensure adequate lighting</li>
-              <li>Keep objects in view for 2+ seconds</li>
-              <li>Position camera perpendicular to objects</li>
+              <li>Ensure adequate lighting. Avoid heavy shadows which can lower confidence scores</li>
+              <li>Keep the camera steady to prevent motion blur and misclassification</li>
+              <li>The model is best with high resolution and minimal object occlusion</li>
             </ul>
           </div>
 
@@ -114,15 +123,22 @@
               <div class="step">
                 <div class="step-num">1</div>
                 <div class="step-text">
-                  <strong>Start Camera</strong>
-                  <p>Click the "Start Camera" button to begin live detection</p>
+                  <strong>Authorize and Start</strong>
+                  <p>Log in first, grant camera permissions, and click "Start Camera" to activate live feed</p>
                 </div>
               </div>
               <div class="step">
                 <div class="step-num">2</div>
                 <div class="step-text">
-                  <strong>View Detection</strong>
-                  <p>Watch as bounding boxes appear around detected objects</p>
+                  <strong>Live Detection & Analysis</strong>
+                  <p>Point the camera at an object. Watch as bounding boxes appear around detected objects</p>
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-text">
+                  <strong>Save Performance Data</strong>
+                  <p>Detections are automatically logged to the backend</p>
                 </div>
               </div>
             </div>
@@ -142,7 +158,7 @@
       </div>
     </main>
 
-    <!-- ... (Auth Modal remains the same) ... -->
+    <!-- Auth Modal -->
     <div v-if="showAuthModal" class="modal-overlay" @click.self="closeAuthModal">
       <div class="modal-content">
         <div class="modal-icon">
@@ -237,8 +253,8 @@ const startCamera = async () => {
   try {
     statusText.value = 'Initializing...';
     
-    // NEW: Use reversed ideal resolution (e.g., 720x1280) for a portrait-optimized initial stream on mobile, 
-    // while keeping the existing high resolution for desktop.
+    // For mobile: Ideal 720x1280 (Portrait). 
+    // For desktop: Ideal 1280x720 (Landscape).
     const constraints = isMobileDevice.value 
       ? { 
           facingMode: facingMode.value, 
@@ -330,7 +346,7 @@ const toggleFullscreen = () => {
   }
 };
 
-// --- Detection Loop and Render Functions (No functional changes needed here) ---
+// --- Detection Loop and Render Functions ---
 const clearDetection = () => {
   detectionCount.value = 0;
   avgConfidence.value = 0;
@@ -546,9 +562,8 @@ $nav-height: 80px;
   border: 1px solid #1e293b; 
   box-shadow: 0 0 40px rgba(0,0,0,0.5);
   
-  // Mobile Adjustments for a more square-ish or taller video container
   @media (max-width: 600px) {
-    aspect-ratio: 4/3; // More suitable for phone screens
+    aspect-ratio: 4/3; // Taller for mobile
     border-radius: 10px;
   }
 
@@ -559,44 +574,42 @@ $nav-height: 80px;
     background: #0d121c; 
     z-index: 10; 
     text-align: center;
-    // ... (Icon and text styles for overlay)
     .camera-off-icon { position: relative; width: 100px; height: 100px; color: #718096; margin-bottom: 20px; svg { width: 100px; height: 100px; stroke-width: 1.5; } .red-slash { position: absolute; top: 50%; left: 0; right: 0; height: 8px; background-color: #ef4444; transform: rotate(45deg); border-radius: 4px; z-index: 1; box-shadow: 0 0 10px rgba(#ef4444, 0.5); } }
     .title-text { color: white; font-size: 1.8rem; font-weight: 700; margin-bottom: 10px; }
     .instruction-text { color: #94a3b8; max-width: 300px; line-height: 1.5; }
     @media (max-width: 600px) { .title-text { font-size: 1.5rem; } .instruction-text { font-size: 0.9rem; } }
   }
 
-  // Analyzing badge (positioned top-right)
+  // Analyzing badge
   .analyzing-badge { position: absolute; top: 20px; right: 20px; background: rgba(0, 0, 0, 0.7); color: #fff; padding: 8px 16px; border-radius: 20px; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 600; z-index: 20; border: 1px solid rgba(255, 255, 255, 0.1); .spinner { width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; } }
   
-  // Fullscreen Button (Positioned bottom-right)
-  .fullscreen-btn {
+  // Exit Fullscreen Button (Center Bottom)
+  .exit-fullscreen-overlay-btn {
     position: absolute;
-    bottom: 20px; 
-    right: 20px;
-    background: rgba(0, 0, 0, 0.4);
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.6);
     color: white;
-    border: none;
-    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
-    cursor: pointer;
-    z-index: 99; // INCREASED Z-INDEX FOR MOBILE CLICKABILITY
-    width: 40px;
-    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.2s;
-    
-    svg { width: 20px; height: 20px; }
+    cursor: pointer;
+    z-index: 1000;
+    transition: all 0.2s;
 
-    &:hover { background: rgba(0, 0, 0, 0.7); }
+    &:hover { background: rgba(239, 68, 68, 0.8); border-color: transparent; }
+    svg { width: 24px; height: 24px; }
   }
-  
+
   .live-video { 
     width: 100%; height: 100%; 
     object-fit: cover; 
-    transform: scaleX(-1); // Standard mirror 
+    transform: scaleX(-1); // Mirror
     &.hidden { display: none; } 
   }
 
@@ -608,7 +621,7 @@ $nav-height: 80px;
 }
 
 // ===================================
-// FULLSCREEN STYLES (UPDATED FOR PORTRAIT MOBILE)
+// FULLSCREEN STYLES (Portrait / Mobile)
 // ===================================
 .video-wrapper:fullscreen {
   width: 100vw;
@@ -617,27 +630,22 @@ $nav-height: 80px;
   border-radius: 0;
   background: black;
   
-  // Force video and canvas to cover the full screen
   .live-video, .detection-canvas {
     width: 100%;
     height: 100%;
-    object-fit: cover; // USE COVER to fill the screen (cropping if needed)
-    aspect-ratio: unset;
+    object-fit: cover; // Crucial for "Portrait" feel on mobile
+  }
+
+  // Ensure button stays at bottom even if video is tall
+  .exit-fullscreen-overlay-btn {
+    position: fixed; 
+    bottom: 40px;
   }
 }
-// Vendor-prefixed fullscreen styles
-:-webkit-full-screen .video-wrapper {
-  width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0;
-  .live-video, .detection-canvas { object-fit: cover; aspect-ratio: unset; }
-}
-:-moz-full-screen .video-wrapper {
-  width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0;
-  .live-video, .detection-canvas { object-fit: cover; aspect-ratio: unset; }
-}
-:-ms-fullscreen .video-wrapper {
-  width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0;
-  .live-video, .detection-canvas { object-fit: cover; aspect-ratio: unset; }
-}
+
+// Vendor prefixes
+:-webkit-full-screen .video-wrapper { width: 100vw; height: 100vh; aspect-ratio: unset; }
+:-moz-full-screen .video-wrapper { width: 100vw; height: 100vh; aspect-ratio: unset; }
 
 
 // ===================================
@@ -650,11 +658,9 @@ $nav-height: 80px;
   
   @media (max-width: 600px) {
     flex-wrap: wrap; 
-    
     .btn-primary, .btn-secondary {
         flex: 1 1 auto; 
-        min-width: 30%; 
-        text-align: center;
+        min-width: 40%; 
     }
   }
 
@@ -682,7 +688,6 @@ $nav-height: 80px;
     &.flip-btn svg { width: 20px; height: 20px; }
   } 
 
-  // Mobile-specific button appearance
   @media (max-width: 600px) {
     .btn-secondary {
       padding: 10px 15px; 
@@ -690,7 +695,6 @@ $nav-height: 80px;
       flex-direction: column; 
       gap: 2px;
     }
-
     .btn-primary {
       padding: 12px 15px;
       font-size: 0.9rem;
@@ -698,11 +702,10 @@ $nav-height: 80px;
   }
 }
 
-
 // ===================================
 // STATS PANEL
 // ===================================
-
+// ... (Remains unchanged from original) ...
 .stats-panel { 
   display: grid; 
   grid-template-columns: repeat(4, 1fr); 
@@ -734,7 +737,7 @@ $nav-height: 80px;
   } 
 }
 
-// ... (Rest of the CSS for right column and modal remains the same) ...
+// ... (Rest of CSS: right column, modal, tips, etc. is preserved) ...
 .right-column { display: flex; flex-direction: column; gap: 20px; }
 .info-card { background-color: $card-bg; border-radius: 12px; padding: 20px; border: 1px solid #1e293b; }
 .tips-card { border: 1px solid rgba($teal, 0.3); background: linear-gradient(180deg, rgba($teal, 0.05) 0%, $card-bg 100%); .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; .icon-info { color: $teal; font-weight: bold; border: 1px solid $teal; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; } h3 { font-size: 1.1rem; color: white; margin: 0; } } ul { padding-left: 20px; color: #cbd5e1; li { margin-bottom: 8px; font-size: 0.9rem; } } }
@@ -742,7 +745,6 @@ $nav-height: 80px;
 .system-card { border-left: 3px solid $green; .system-header { display: flex; align-items: center; gap: 10px; color: white; font-weight: 700; margin-bottom: 15px; .status-dot { width: 10px; height: 10px; background-color: #64748b; border-radius: 50%; &.active { background-color: $green; box-shadow: 0 0 10px $green; } } } .system-details p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 5px; span { color: white; float: right; font-weight: 500; } } }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* --- MODAL STYLES --- */
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0, 0, 0, 0.8);
@@ -776,46 +778,15 @@ $nav-height: 80px;
   p { color: #94a3b8; font-size: 0.95rem; margin-bottom: 25px; line-height: 1.5; }
 
   .modal-actions {
-    display: flex; 
-    flex-direction: column; 
-    gap: 12px; 
-    margin-bottom: 15px;
-    
+    display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px;
     .full-width { width: 100%; justify-content: center; }
-    
     .btn-primary {
-      background-color: $teal;  
-      color: #000000;           
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      font-weight: 700;         
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      
-      &:hover { 
-        background-color: $teal-hover; 
-        transform: translateY(-1px); 
-        box-shadow: 0 4px 12px rgba($teal, 0.3); 
-      }
+      background-color: $teal; color: #000000; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.2s ease;
+      &:hover { background-color: $teal-hover; transform: translateY(-1px); box-shadow: 0 4px 12px rgba($teal, 0.3); }
     }
-
     .btn-outline {
-      background: transparent; 
-      border: 1px solid #334155; 
-      color: white;
-      padding: 12px; 
-      border-radius: 8px; 
-      font-weight: 600; 
-      cursor: pointer; 
-      transition: all 0.2s;
-      
-      &:hover { 
-        border-color: $teal; 
-        color: $teal; 
-        background: rgba($teal, 0.05);
-      }
+      background: transparent; border: 1px solid #334155; color: white; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+      &:hover { border-color: $teal; color: $teal; background: rgba($teal, 0.05); }
     }
   }
 

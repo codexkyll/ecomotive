@@ -7,12 +7,12 @@
     <main class="main-content">
       
       <!-- ================= 1. ABOUT HEADER ================= -->
-      <section class="page-header animate-fade-in">
+      <!-- ADDED center-text CLASS FOR CENTERING -->
+      <section class="page-header animate-fade-in center-text">
         <h1>About EcoMotive</h1>
+        <!-- SUBTITLE NOW CENTERS BECAUSE OF PARENT CLASS -->
         <p class="subtitle">
-          We're building the next generation of AI-powered computer vision solutions to help 
-          identify, track, and analyze plants, animals, and vehicles with unprecedented accuracy 
-          and speed.
+          Delivering the next generation of real-time computer vision to accurately identify, track, and analyze Plants, Animals, and Vehicles.
         </p>
       </section>
 
@@ -21,30 +21,35 @@
         <div class="grid-3">
           <div class="card mission-card">
             <h3>Our Mission</h3>
-            <p>To democratize advanced computer vision technology and make real-time AI detection accessible for environmental and urban monitoring.</p>
+            <p>To democratize advanced computer vision technology, making powerful, real-time object detection accessible for meticulous environmental and urban monitoring.</p>
           </div>
           <div class="card mission-card">
             <h3>Our Vision</h3>
-            <p>Creating a world where AI-powered visual intelligence drives smarter decisions, safer communities, and better ecological awareness.</p>
+            <p>Creating a world where high-precision visual intelligence drives smarter decisions, enables critical ecological conservation, and builds safer, more efficient communities.</p>
           </div>
           <div class="card mission-card">
             <h3>Our Values</h3>
-            <p>Innovation, accuracy, transparency, and a commitment to responsible AI development and deployment.</p>
+            <p>Innovation, Exceptional Accuracy, Data Transparency, and a commitment to continuous learning through a Real-World Feedback Loop for evolving technology.</p>
           </div>
         </div>
       </section>
 
       <!-- ================= 3. TEAM SECTION ================= -->
       <section class="section-block">
-        <h2 class="section-heading">Meet Our Team</h2>
-        <p class="section-sub">A dedicated group of students and developers committed to advancing computer vision.</p>
+        <!-- ALREADY CENTERED -->
+        <h2 class="section-heading center">Meet Our Team</h2>
+        <!-- ALREADY CENTERED -->
+        <p class="section-sub center">A dedicated and interdisciplinary group of student developers, focused on full-stack engineering, model training, and meticulous data analysis, all committed to the continuous development of the EcoMotive vision solution.</p>
         
         <div class="grid-3">
           <div v-for="member in teamMembers" :key="member.name" class="card team-card">
-            <div class="member-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+            <!-- IMAGE ALIGNS CENTER VIA .team-card CSS -->
+            <div class="member-icon photo-icon">
+              <!-- Replaced SVG with Image tag -->
+              <img :src="member.image" :alt="member.name" class="member-photo">
             </div>
             
+            <!-- TEXT ALIGNS CENTER VIA .team-card CSS -->
             <h3 class="member-name">{{ member.name }}</h3>
             <span class="member-role">{{ member.role }}</span>
             
@@ -78,34 +83,42 @@
 import { ref } from 'vue';
 import Navbar from '../components/navbar.vue'; // IMPORT NAVBAR
 
-// --- Team Members and their Roles ---
+// 1. IMPORT IMAGES
+import jedImage from '../assets/img/jed.jpg';
+import leoImage from '../assets/img/leo.jpg';
+import kimImage from '../assets/img/kim.png';
+
+// --- Team Members and their Roles (UPDATED CONTENT) ---
 const teamMembers = ref([
   {
     name: 'Tecson, Jade Kyll M.',
-    role: 'Lead AI Engineer',
-    description: 'ML expert specializing in object detection, dataset curation, and model optimization using YOLO architecture.',
-    skills: ['Machine Learning', 'Computer Vision', 'Python']
+    role: 'Lead Developer & Front-End Architect',
+    description: 'The core conceptual mind and primary developer. Responsible for translating project requirements into the highly functional web application, mastering the API connection logic, and designing the intuitive User Interface (UI) and user experience (UX).',
+    skills: ['Web Application Logic', 'UI/UX Conceptualization', 'Vue.js Framework', 'API Integration'],
+    image: jedImage // ADDED IMAGE PATH
   },
   {
     name: 'Antipuesto, Leo Alfier S.',
-    role: 'Full Stack Developer',
-    description: 'Full stack engineer focused on building the scalable web application, API integration, and backend server logic.',
-    skills: ['Vue.js', 'Node.js', 'System Design']
+    role: 'Model Training Specialist & Design Contributor',
+    description: 'Specialized in the Machine Learning Operations (ML Ops) process, leading the YOLO model training, optimization, and dataset refinement efforts. Provided essential support in web design, particularly focusing on optimal application flow and model integration.',
+    skills: ['YOLO Model Training', 'Dataset Optimization', 'Web Design Flow', 'Model Integration'],
+    image: leoImage // ADDED IMAGE PATH
   },
   {
     name: 'Carin, Kimberly O.',
-    role: 'Data Scientist',
-    description: 'Data specialist responsible for dataset management, quality assurance, and analyzing model performance metrics.',
-    skills: ['Data Analysis', 'Model Training', 'Roboflow']
+    role: 'Documentation and Process Analyst',
+    description: 'Crucial for project governance. Assigned to manage all official project documentation, track process progress, and ensure data quality through meticulous performance validation and reporting on model failure metrics.',
+    skills: ['Project Documentation', 'Performance Metrics', 'Quality Assurance', 'Process Methodology'],
+    image: kimImage // ADDED IMAGE PATH
   }
 ]);
 
-// --- Stats Data ---
+// --- Stats Data (UPDATED LABELS) ---
 const stats = ref([
-  { value: '3', label: 'Primary Classes' },
-  { value: '437+', label: 'Training Images' },
-  { value: '96.4%', label: 'Average Precision' },
-  { value: 'Real-time', label: 'Detection Speed' }
+  { value: '3', label: 'Core Segmentation Classes' },
+  { value: '437+', label: 'Annotated Dataset Instances' },
+  { value: '96.4%', label: 'Post-Refinement mAP Score' },
+  { value: 'Real-time', label: 'Sub-Second Latency' }
 ]);
 </script>
 
@@ -143,13 +156,22 @@ $green: #22c55e;
   margin-bottom: 60px;
   h1 { font-size: 3.5rem; font-weight: 800; color: white; margin-bottom: 20px; letter-spacing: -1px; }
   .subtitle { color: #94a3b8; font-size: 1.2rem; line-height: 1.6; max-width: 800px; }
+  
+  // NEW RULE: Centering for page-header text
+  &.center-text {
+    text-align: center;
+    .subtitle {
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
 }
 
 /* --- Section Utilities --- */
 .section-block { margin-bottom: 80px; }
 .section-heading { font-size: 2rem; font-weight: 700; color: white; margin-bottom: 10px; }
 .section-sub { color: #94a3b8; margin-bottom: 40px; font-size: 1.1rem; }
-.center { text-align: center; }
+.center { text-align: center; } 
 
 /* --- Grids --- */
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
@@ -173,9 +195,14 @@ $green: #22c55e;
 
 /* --- Team Cards --- */
 .team-card {
-  display: flex; flex-direction: column; align-items: flex-start;
-  
+  // CHANGED FROM flex-start TO center to center the image and text blocks
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  text-align: center; // Center text elements
+
   .member-icon {
+    // OLD ICON STYLES:
     width: 60px; height: 60px;
     background: linear-gradient(135deg, rgba($teal, 0.1), rgba($teal, 0.05));
     border-radius: 12px;
@@ -183,14 +210,33 @@ $green: #22c55e;
     margin-bottom: 20px;
     color: $teal;
     svg { width: 30px; height: 30px; }
+    
+    // NEW PHOTO STYLES:
+    &.photo-icon {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%; /* Makes it circular */
+      overflow: hidden;
+      padding: 0;
+      border: 3px solid $teal; /* Accent border */
+      background: $card-bg;
+      
+      .member-photo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Ensures the image fills the circle */
+      }
+    }
   }
 
   .member-name { color: white; font-size: 1.25rem; font-weight: 700; margin-bottom: 5px; }
   .member-role { color: $teal; font-size: 0.9rem; font-weight: 600; margin-bottom: 15px; display: block; }
+  // Adjusted margin to allow space for centered text and align the tags at the bottom
   .member-desc { color: #94a3b8; font-size: 0.95rem; line-height: 1.5; margin-bottom: 25px; flex-grow: 1; }
 
   .member-tags {
     display: flex; flex-wrap: wrap; gap: 8px;
+    justify-content: center; // Center the tags
     .tag {
       background: rgba($teal, 0.1); color: $teal;
       padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600;
