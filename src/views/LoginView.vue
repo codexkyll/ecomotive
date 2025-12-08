@@ -83,36 +83,31 @@ const email = ref('');
 const password = ref('');
 const isLoading = ref(false);
 
-// Configuration
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL 
-  ? import.meta.env.VITE_BACKEND_URL.replace('/detections', '/auth/login') 
+// Logic: If on Vercel (Production), use relative path. If local, use localhost:5000.
+const API_URL = import.meta.env.PROD 
+  ? '/api/auth/login' 
   : 'http://localhost:5000/api/auth/login';
 
 const handleLogin = async () => {
   isLoading.value = true;
   
   try {
-    const response = await axios.post(BACKEND_URL, {
+    const response = await axios.post(API_URL, {
       email: email.value,
       password: password.value
     });
 
-    // 1. Success: Save Token
     const { token, user } = response.data;
     
-    // Make sure we use 'userToken' to match LiveCameraView.vue logic
     localStorage.setItem('userToken', token);
     localStorage.setItem('userEmail', user.email);
 
-    // 2. Alert Navbar to update state
-    window.dispatchEvent(new Event('storage')); // Trigger update for other tabs/components
-
-    // 3. Redirect
+    window.dispatchEvent(new Event('storage')); 
     router.push('/');
     
   } catch (error) {
     console.error("Login Error:", error);
-    // Show specific error message from backend if available
+    // Fix for [object Object] alert
     const msg = error.response?.data?.error || 'Login failed. Please check your credentials.';
     alert(msg);
   } finally {

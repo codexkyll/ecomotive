@@ -99,8 +99,9 @@ const email = ref('');
 const password = ref('');
 const confirmPassword = ref('');
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL 
-  ? import.meta.env.VITE_BACKEND_URL.replace('/detections', '/auth/signup') 
+// Logic: If on Vercel (Production), use relative path. If local, use localhost:5000.
+const API_URL = import.meta.env.PROD 
+  ? '/api/auth/signup' 
   : 'http://localhost:5000/api/auth/signup';
 
 const handleSignup = async () => {
@@ -110,7 +111,7 @@ const handleSignup = async () => {
   }
 
   try {
-    const response = await axios.post(BACKEND_URL, {
+    const response = await axios.post(API_URL, {
       fullName: fullName.value,
       email: email.value,
       password: password.value
@@ -120,7 +121,7 @@ const handleSignup = async () => {
         localStorage.setItem('userToken', response.data.token);
         localStorage.setItem('userName', fullName.value);
         alert('Account Created Successfully!');
-        router.push('/live-camera');
+        router.push('/live-camera'); // Or wherever you want to redirect
     }
   } catch (error) {
     console.error(error);
