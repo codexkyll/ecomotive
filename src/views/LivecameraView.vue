@@ -46,23 +46,19 @@
             </button>
             
             <!-- D. Live Video Element -->
-            <!-- FIX: Added 'mirrored' class strictly for Front Camera -->
+            <!-- FIXED: Removed 'mirrored' class binding to prevent inversion on Web -->
             <video 
               ref="videoRef" 
               autoplay 
               playsinline 
               muted 
               class="live-video" 
-              :class="{ 'hidden': !isStreaming, 'mirrored': facingMode === 'user' }"
+              :class="{ 'hidden': !isStreaming }"
             ></video>
             
             <!-- E. Canvas for Bounding Boxes -->
-            <!-- FIX: Mirror the canvas via CSS to match video if in selfie mode -->
-            <canvas 
-              ref="canvasRef" 
-              class="detection-canvas"
-              :class="{ 'mirrored': facingMode === 'user' }"
-            ></canvas>
+            <!-- FIXED: Removed 'mirrored' class to ensure text is always readable -->
+            <canvas ref="canvasRef" class="detection-canvas"></canvas>
           </div>
 
           <!-- 2. Controls -->
@@ -313,6 +309,7 @@ const startCamera = async () => {
     }
   } catch (error) {
     console.error("Error accessing webcam:", error);
+    // Desktop fallback: If environment camera is not found, use default (user)
     if (error.name === "OverconstrainedError" && facingMode.value === 'environment') {
         facingMode.value = 'user'; 
         startCamera(); 
@@ -494,8 +491,8 @@ const renderPredictions = (predictions) => {
     if (c.includes('animal')) color = '#3b82f6'; 
     if (c.includes('vehicle')) color = '#f59e0b'; 
 
-    // FIX: Standard coordinates calculation. 
-    // We do NOT flip math here anymore. CSS handles the visual flip if needed.
+    // FIX: Use standard coordinates directly. No complex flipping logic.
+    // This assumes the video is NOT inverted/mirrored via CSS.
     const topLeftX = x - (width / 2);
     const topLeftY = y - (height / 2);
 
@@ -616,7 +613,7 @@ $orange: #f59e0b;
   .live-video { 
     width: 100%; height: 100%; 
     object-fit: cover; 
-    /* REMOVED DEFAULT TRANSFORM HERE. Now handled by .mirrored class */
+    /* REMOVED: transform: scaleX(-1); Video is now always 'True View' */
     &.hidden { display: none; } 
   }
 
@@ -625,11 +622,6 @@ $orange: #f59e0b;
     width: 100%; height: 100%; 
     pointer-events: none; 
   }
-}
-
-// MIRROR CLASS (For Selfie Mode)
-.mirrored {
-  transform: scaleX(-1);
 }
 
 // ===================================
