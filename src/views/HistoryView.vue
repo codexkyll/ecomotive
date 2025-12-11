@@ -5,7 +5,7 @@
     <main class="main-content">
       <section class="page-header">
         <h1>Detection History</h1>
-        <p class="subtitle">View and analyze all past detections from MongoDB Atlas</p>
+        <p class="subtitle">Access and review your detection history.</p>
       </section>
 
       <!-- ================= STATS CARDS (Always Visible) ================= -->
@@ -110,6 +110,7 @@
       </div>
 
     </main>
+    <Footer />
   </div>
 </template>
 
@@ -118,6 +119,7 @@ import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router'; 
 import Navbar from '../components/navbar.vue';
+import Footer from '../components/footer.vue';
 
 const router = useRouter();
 

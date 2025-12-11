@@ -186,7 +186,7 @@
         <button @click="closeAuthModal" class="btn-text">Cancel</button>
       </div>
     </div>
-
+    <Footer />
   </div>
 </template>
 
@@ -195,6 +195,7 @@ import { ref, onUnmounted, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import Navbar from '../components/navbar.vue'; 
+import Footer from '../components/footer.vue';
 
 // --- Configuration ---
 const API_KEY = import.meta.env.VITE_ROBOFLOW_PRIVATE_API_KEY;

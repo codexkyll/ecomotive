@@ -1,8 +1,9 @@
 <template>
   <nav class="navbar">
-    <!-- 1. Logo -->
+    <!-- 1. Logo (UPDATED) -->
     <div class="logo" @click="router.push('/')">
-      <div class="logo-icon">E</div>
+      <!-- Replaced the "E" box with your image -->
+      <img :src="logoImg" alt="EcoMotive Logo" class="logo-img" />
       <span>EcoMotive</span>
     </div>
 
@@ -98,6 +99,9 @@ import { ref, onMounted, computed, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
 
+// --- IMPORT LOGO HERE ---
+import logoImg from '../assets/img/ecomotive logo.png';
+
 const router = useRouter();
 const route = useRoute();
 
@@ -142,8 +146,6 @@ const checkAuthStatus = async () => {
         console.error("Auth check failed:", error);
         
         // --- FIX 2: PREVENT FALSE LOGOUTS ---
-        // Only logout if the server EXPLICITLY says the token is wrong (401 or 403)
-        // Do NOT logout on 404 or Network Error
         if (error.response && (error.response.status === 401 || error.response.status === 403)) {
           handleLogout();
         }
@@ -221,8 +223,14 @@ $bg-color: #050b14;
   background-color: $bg-color;
   
   .logo { 
-    display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.2rem; color: #fff; cursor: pointer; z-index: 102;
-    .logo-icon { width: 2rem; height: 2rem; background-color: $green; color: #000; border-radius: 6px; display: flex; align-items: center; justify-content: center; } 
+    display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.2rem; color: #fff; cursor: pointer; z-index: 102;
+    
+    /* UPDATED LOGO IMAGE STYLES */
+    .logo-img {
+      height: 45px; /* Adjust height as needed */
+      width: auto;
+      object-fit: contain;
+    }
   }
 }
 

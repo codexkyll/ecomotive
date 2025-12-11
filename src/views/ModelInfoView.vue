@@ -38,6 +38,78 @@
       </section>
 
       <!-- ============================================ -->
+      <!--    NEW SECTION: TRAINING CONFIGURATION     -->
+      <!-- ============================================ -->
+      <section class="section-block animate-fade-in" style="animation-delay: 0.2s;">
+        <h2 class="section-title">Training Configuration & Performance</h2>
+        <div class="grid-2">
+          
+          <!-- Card 1: Data & Specs -->
+          <div class="info-card specs-card">
+            <div class="card-header">
+              <div class="icon-box purple">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <h3>Training Specs & Data</h3>
+            </div>
+            <ul class="data-list">
+              <li>
+                <span class="data-label">Dataset Size:</span>
+                <span class="data-value">1300+ Annotated Images</span>
+              </li>
+              <br>
+              <li>
+                <span class="data-label">Data Source:</span>
+                <span class="data-value">Phone Camera (Real-world) & Web Scraping</span>
+              </li>
+              <br>
+              <li>
+                <span class="data-label">Annotation Method</span>
+                <span class="data-value">Precise Polygon Masks</span>
+              </li>
+              <br>
+              <li>
+                <span class="data-label">Training Epochs:</span>
+                <span class="data-value">100 (with Periodic Fine-Tuning)</span>
+              </li>
+              <br>
+              <li>
+                <span class="data-label">Strategy:</span>
+                <span class="data-value">Dynamic Feedback Loop & Augmentation</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Card 2: Findings & Challenges -->
+          <div class="info-card findings-card">
+             <div class="card-header">
+              <div class="icon-box red">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
+                </svg>
+              </div>
+              <h3>Findings & Challenges</h3>
+            </div>
+            <div class="finding-item">
+              <strong>🏆 Success Metric:</strong>
+              <p>Model achieved stable training with Box Loss < 0.025 and mAP@50 of 91.4%, producing tight and accurate segmentation masks even in complex backgrounds.</p>
+            </div>
+            <div class="finding-item">
+              <strong>⚠️ Main Challenge:</strong>
+              <p>Early model versions displayed class confusion due to loose bounding boxes that captured excessive background. This background noise introduced non-discriminative features into training, leading the model to misinterpret green textures and plant structures as vehicle characteristics.</p>
+            </div>
+            <div class="finding-item">
+              <strong>✅ Resolution:</strong>
+              <p>Integrated an active learning pipeline where mispredictions are surfaced, re-labeled, and iteratively reintroduced into training, improving robustness against occlusion, variability, and edge-case scenarios.</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ============================================ -->
       <!--           3. DETECTION CLASSES             -->
       <!-- ============================================ -->
       <section class="section-block">
@@ -107,19 +179,22 @@
       </section>
 
     </main>
+
+    <Footer />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import Navbar from '../components/navbar.vue'; // IMPORT NAVBAR
+import Navbar from '../components/navbar.vue'; 
+import Footer from '../components/footer.vue';
 
 // --- Data Content ---
 const detectionClasses = ref([
   {
     title: 'Plants',
     description: 'The model finds and outlines many types of plants, including flowers and bushes, even when they look similar to other objects.',
-    items: ['Leaves and general greenery', 'Flowers (like Bougainvillea)', 'Objects near and far', 'Works well in cluttered areas'],
+    items: ['Flower clusters', 'Leaf and foliage patterns', 'Objects at varying distances', 'Reliable detection even in visually cluttered floral environments'],
     icon: 'plant',
     color: 'green'
   },
@@ -195,6 +270,8 @@ $green: #22c55e;
 $blue: #3b82f6;
 $orange: #f59e0b;
 $yellow: #facc15;
+$purple: #a855f7;
+$red: #ef4444;
 
 .dashboard-container {
   background-color: $bg-color;
@@ -205,9 +282,7 @@ $yellow: #facc15;
   overflow-x: hidden;
 }
 
-/* --- 2. Navbar Styles Removed (Handled by Component) --- */
-
-/* --- 3. Layout Utilities --- */
+/* --- Layout Utilities --- */
 .main-content {
   max-width: 1200px;
   margin: 0 auto;
@@ -217,15 +292,15 @@ $yellow: #facc15;
 .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
 .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 30px; }
 
-/* --- 4. Page Header & Stats --- */
+/* --- Page Header & Stats --- */
 .page-header {
-  margin-bottom: 80px;
+  margin-bottom: 60px; /* Reduced slightly to fit new section */
   
   h1 { font-size: 3rem; font-weight: 800; line-height: 1.2; margin-bottom: 15px; }
   .subtitle { font-size: 1.1rem; color: #94a3b8; margin-bottom: 40px; }
 
   .stats-container {
-    background-color: #0a0a0a; // Darker inner bg
+    background-color: #0a0a0a;
     border: 1px solid #1e293b;
     border-radius: 16px;
     padding: 30px;
@@ -250,7 +325,7 @@ $yellow: #facc15;
   }
 }
 
-/* --- 5. Sections & Cards --- */
+/* --- Sections & Cards --- */
 .section-block { margin-bottom: 80px; }
 .section-title { font-size: 2rem; font-weight: 700; margin-bottom: 30px; }
 
@@ -268,6 +343,26 @@ $yellow: #facc15;
   }
 }
 
+/* --- New Training Specs Styles --- */
+.data-list {
+  list-style: none; padding: 0; margin: 0;
+  li {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid #1e293b;
+    
+    &:last-child { border-bottom: none; }
+
+    .data-label { color: #94a3b8; font-size: 0.95rem; }
+    .data-value { color: white; font-weight: 600; text-align: right; }
+  }
+}
+
+.finding-item {
+  margin-bottom: 15px;
+  strong { display: block; color: white; margin-bottom: 4px; font-size: 0.95rem; }
+  p { margin: 0; color: #94a3b8; font-size: 0.9rem; line-height: 1.5; }
+}
+
 /* Detection Classes Styling */
 .card-header {
   display: flex; align-items: center; gap: 15px; margin-bottom: 20px;
@@ -276,15 +371,11 @@ $yellow: #facc15;
     width: 50px; height: 50px; border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
     
-    // Existing SVG sizing
     svg { width: 28px; height: 28px; }
-
-    /* Image sizing */
     img { width: 60px; height: auto; }
     
     &.green { background: rgba($green, 0.15); color: $green; }
     
-    /* Blue box makes image white */
     &.blue { 
       background: rgba($blue, 0.15); 
       color: $blue;
@@ -292,6 +383,8 @@ $yellow: #facc15;
     }
     
     &.orange { background: rgba($orange, 0.15); color: $orange; }
+    &.purple { background: rgba($purple, 0.15); color: $purple; }
+    &.red { background: rgba($red, 0.15); color: $red; }
   }
   
   h3 { font-size: 1.4rem; font-weight: 700; color: white; margin: 0; }
@@ -333,6 +426,7 @@ $yellow: #facc15;
   .stats-container { flex-direction: column; align-items: flex-start; }
   .stat-separator { display: none; }
   .grid-2 { grid-template-columns: 1fr; }
+  .data-list li { flex-direction: column; align-items: flex-start; gap: 5px; .data-value { text-align: left; } }
 }
 
 .animate-fade-in { animation: fadeIn 0.8s ease-out; }

@@ -158,7 +158,7 @@ $green: #22c55e;
 
 /* --- Left Panel (Marketing) --- */
 .left-panel {
-  // Reverted to original dark background styling
+
   padding: 0; // Removed extra padding from gradient change
   border-radius: 0; // Removed border-radius from gradient change
   box-shadow: none; // Removed box-shadow from gradient change
@@ -234,7 +234,6 @@ $green: #22c55e;
     &:hover:not(:disabled) { background-color: $teal-hover; }
   }
   
-  /* REMOVED .btn-google CSS */
 
   .divider {
     text-align: center; margin: 25px 0; border-top: 1px solid #334155; position: relative;

@@ -76,47 +76,50 @@
       </section>
 
     </main>
+
+    <Footer />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import Navbar from '../components/navbar.vue'; // IMPORT NAVBAR
+import Navbar from '../components/navbar.vue'; 
+import Footer from '../components/footer.vue';
 
 // 1. IMPORT IMAGES
 import jedImage from '../assets/img/jed.jpg';
 import leoImage from '../assets/img/leo.jpg';
 import kimImage from '../assets/img/kim.png';
 
-// --- Team Members and their Roles (UPDATED CONTENT) ---
+// --- Team Members and their Roles---
 const teamMembers = ref([
   {
     name: 'Tecson, Jade Kyll M.',
     role: 'Lead Developer & Front-End Architect',
     description: 'The core conceptual mind and primary developer. Responsible for translating project requirements into the highly functional web application, mastering the API connection logic, and designing the intuitive User Interface (UI) and user experience (UX).',
     skills: ['Web Application Logic', 'UI/UX Conceptualization', 'Vue.js Framework', 'API Integration'],
-    image: jedImage // ADDED IMAGE PATH
+    image: jedImage 
   },
   {
     name: 'Antipuesto, Leo Alfier S.',
     role: 'Model Training Specialist & Design Contributor',
     description: 'Specialized in the Machine Learning Operations (ML Ops) process, leading the YOLO model training, optimization, and dataset refinement efforts. Provided essential support in web design, particularly focusing on optimal application flow and model integration.',
     skills: ['YOLO Model Training', 'Dataset Optimization', 'Web Design Flow', 'Model Integration'],
-    image: leoImage // ADDED IMAGE PATH
+    image: leoImage 
   },
   {
     name: 'Carin, Kimberly O.',
     role: 'Documentation and Process Analyst',
     description: 'Crucial for project governance. Assigned to manage all official project documentation, track process progress, and ensure data quality through meticulous performance validation and reporting on model failure metrics.',
     skills: ['Project Documentation', 'Performance Metrics', 'Quality Assurance', 'Process Methodology'],
-    image: kimImage // ADDED IMAGE PATH
+    image: kimImage 
   }
 ]);
 
 // --- Stats Data (UPDATED LABELS) ---
 const stats = ref([
   { value: '3', label: 'Core Segmentation Classes' },
-  { value: '437+', label: 'Annotated Dataset Instances' },
+  { value: '1300+', label: 'Annotated Dataset Instances' },
   { value: '96.4%', label: 'Post-Refinement mAP Score' },
   { value: 'Real-time', label: 'Sub-Second Latency' }
 ]);
@@ -142,7 +145,7 @@ $green: #22c55e;
   padding: 0 5%;
 }
 
-/* --- Navbar Styles Removed (Handled by Component) --- */
+
 
 /* --- Main Layout --- */
 .main-content {

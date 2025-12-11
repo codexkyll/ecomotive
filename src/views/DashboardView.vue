@@ -1,4 +1,3 @@
-<!-- src/views/DashboardView.vue -->
 <template>
   <div class="dashboard-container">
     
@@ -25,7 +24,6 @@
         </p>
         
         <div class="cta-group">
-          <!-- <button class="primary-btn" >Learn About Model</button>  -->
           <router-link to="/model-info" class="primary-btn" style="text-decoration: none; ">Learn About Model</router-link>
           <router-link to="/live-camera" class="secondary-btn" style="text-decoration: none; ">Start Detection</router-link>
         </div>
@@ -60,13 +58,10 @@
     <!-- ============================================ -->
     <section class="details-section">
       <div class="text-block">
-        <!-- TITLE CHANGED -->
         <h2>Making Sense of the Real World</h2>
-        <!-- PARAGRAPH CHANGED -->
         <p>
           Our segmentation model offers intelligent data for various applications, turning raw visual input into actionable insights for Plant, Animal, and Vehicle recognition.
         </p>
-        <!-- Removed bullet descriptions: ul.feature-list -->
       </div>
 
       <!-- Capabilities Cards Grid -->
@@ -76,15 +71,11 @@
           :key="item.title" 
           class="card"
         >
+          <!-- UPDATED: Displays the specific imported image -->
           <div class="card-visual" :class="item.colorClass">
-            <img v-if="item.icon === 'plant'" src="../assets/img/plant.png" alt="Plant Detection" />
-            <img v-if="item.icon === 'animal'" src="../assets/img/animal.png" alt="Animal Recognition" />
-            <img v-if="item.icon === 'vehicle'" src="../assets/img/vehicle.png" alt="Vehicle Tracking" />
-            
-            <svg v-if="item.icon === 'bolt'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-            </svg>
+            <img :src="item.image" :alt="item.title" />
           </div>
+
           <div class="card-content">
             <h3>{{ item.title }}</h3>
             <p>{{ item.description }}</p>
@@ -106,38 +97,44 @@
 
       </div>
     </section>
-
+    <Footer />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import Navbar from '../components/navbar.vue'; // IMPORTED HERE
+import Navbar from '../components/navbar.vue'; 
+import Footer from '../components/footer.vue';
+
+// --- UPDATED IMPORTS: Importing specific images from your screenshot ---
+import ecoImg from '../assets/img/ecological monitoring.jpg';
+import wildlifeImg from '../assets/img/wildlife conservation.jpg';
+import trafficImg from '../assets/img/vehicle management.png';
+import intrusionImg from '../assets/img/intrusion detection.jpg';
 
 const capabilities = ref([
   {
     title: 'Ecological Monitoring',
     description: 'Empower agricultural drones and environmental systems with precise monitoring of crop health, species population, and ecological changes.',
-    icon: 'plant',
+    image: ecoImg, // mapped variable
     colorClass: 'green'
   },
   {
     title: 'Wildlife Conservation',
     description: 'Facilitate critical wildlife and habitat monitoring for conservation efforts, enabling real-time counting and tracking of endangered species.',
-    icon: 'animal',
+    image: wildlifeImg, // mapped variable
     colorClass: 'blue'
   },
   {
-    title: 'Smart Traffic Analysis',
-    description: 'Optimize urban planning and traffic flow for Smart Cities by providing real-time data on vehicle counts, congestion, and incident response.',
-    icon: 'vehicle',
+    title: 'Smart Traffic & Vehicle Management',
+    description: 'Provide real-time insights on vehicle counts, traffic flow, and congestion patterns to optimize urban planning and incident management.',
+    image: trafficImg, // mapped variable
     colorClass: 'orange' 
   },
   {
-    title: 'High-Precision Segmentation',
-    // DESCRIPTION REPHRASED
-    description: 'Ensures fast, precise instance segmentation and accurate object boundaries in real world scenarios, supporting quick and reliable decisions.',
-    icon: 'bolt',
+    title: 'Intrusion Detection System',
+    description: 'Detect unauthorized objects, animals, or vehicles in restricted areas with rapid, precise object segmentation for enhanced security and automated alerts.',
+    image: intrusionImg, // mapped variable
     colorClass: 'teal'
   }
 ]);
@@ -148,11 +145,10 @@ const handleStartDetection = () => {
 </script>
 
 <style lang="scss" scoped>
-/* --- 1. Variables (Still needed for the rest of the page) --- */
+/* --- 1. Variables --- */
 $bg-color: #050b14;
 $text-color: #e2e8f0;
 $card-bg: #0f172a;
-// $nav-height: 80px; // Removed as it is now inside the Navbar component
 
 $teal: #14b8a6;
 $teal-hover: #2dd4bf;
@@ -169,9 +165,7 @@ $orange: #f59e0b;
   overflow-x: hidden;
 }
 
-/* --- 2. Navbar Styles REMOVED (Moved to src/components/navbar.vue) --- */
-
-/* --- 3. Hero Section --- */
+/* --- 2. Hero Section --- */
 .hero {
   display: flex; align-items: center; justify-content: space-between; gap: 40px; padding: 80px 0 60px; max-width: 1200px; margin: 0 auto;
   .hero-content { flex: 1; max-width: 600px; .subtitle { font-size: 0.9rem; color: $teal; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; } h1 { font-size: 3.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 20px; .highlight-blue { color: $blue; } .highlight-orange { color: $orange; } } .description { font-size: 1.1rem; color: #94a3b8; line-height: 1.6; margin-bottom: 40px; } .cta-group { display: flex; gap: 15px; .primary-btn { background-color: $teal; color: black; border: none; padding: 12px 30px; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.2s; &:hover { transform: translateY(-2px); } } .secondary-btn { background-color: transparent; color: $text-color; border: 1px solid #334155; padding: 12px 30px; border-radius: 6px; font-size: 1rem; cursor: pointer; &:hover { border-color: $teal; color: $teal; } } } }
@@ -208,28 +202,14 @@ $orange: #f59e0b;
 }
 @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
 
-/* --- 4. Details Section --- */
+/* --- 3. Details Section --- */
 .details-section {
   padding: 40px 0 80px; max-width: 1200px; margin: 0 auto;
   .text-block { 
     margin-bottom: 50px; 
-    text-align: center; /* ADDED: Center alignment */
-
-    h2 { 
-      font-size: 2.5rem; /* CHANGED: from 1.5rem to 2.5rem (Bigger) */
-      color: $text-color; /* CHANGED: from #64748b to $text-color (Prominence) */
-      text-transform: uppercase; 
-      letter-spacing: 1px; 
-      margin-bottom: 20px; 
-    } 
-    
-    p { 
-      font-size: 1.1rem; /* ADDED: To make it bigger */
-      color: #94a3b8; 
-      max-width: 800px; /* CHANGED: from 700px to 800px (Wider) */
-      margin: 0 auto 20px; /* CHANGED: Added 'auto' to center the text */
-    } 
-    /* REMOVED .feature-list STYLES */
+    text-align: center;
+    h2 { font-size: 2.5rem; color: $text-color; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; } 
+    p { font-size: 1.1rem; color: #94a3b8; max-width: 800px; margin: 0 auto 20px; } 
   }
 
   .cards-grid {
@@ -243,39 +223,31 @@ $orange: #f59e0b;
       background-color: $card-bg; border-radius: 12px; overflow: hidden; border: 1px solid #1e293b; transition: transform 0.3s ease, box-shadow 0.3s ease;
       &:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); border-color: $teal; }
 
+      /* UPDATED CSS FOR FULL IMAGES */
       .card-visual {
-        height: 180px;
+        height: 200px; /* Increased height slightly for better visibility */
         width: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden; 
         
+        /* Background colors kept as fallbacks/tints */
         &.green { background-color: rgba($green, 0.1); }
-        
-        &.blue { 
-          background-color: rgba($blue, 0.1); 
-          img { filter: brightness(0) invert(1); }
-        }
-        
+        &.blue { background-color: rgba($blue, 0.1); }
         &.orange { background-color: rgba($orange, 0.1); }
-        &.teal { background-color: rgba($teal, 0.1); color: $teal; }
+        &.teal { background-color: rgba($teal, 0.1); }
 
         img {
-          height: 100px; 
-          width: auto;
-          object-fit: contain;
-          filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); 
-          transition: transform 0.3s ease;
-        }
-
-        svg {
-          width: 60px;
-          height: 60px;
+          width: 100%;
+          height: 100%;
+          object-fit: cover; /* Ensures image fills the area */
+          transition: transform 0.5s ease;
+          filter: none; /* Removed icon filters */
         }
 
         &:hover img {
-          transform: scale(1.05);
+          transform: scale(1.1); /* Slight zoom on hover */
         }
       }
 
@@ -288,7 +260,7 @@ $orange: #f59e0b;
   }
 }
 
-/* --- 5. CTA Section --- */
+/* --- 4. CTA Section --- */
 .cta-section {
   padding: 40px 0 80px; max-width: 1200px; margin: 0 auto;
   .cta-card { background: linear-gradient(145deg, #0f172a 0%, #020617 100%); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1.5rem; padding: 4rem 2rem; text-align: center; box-shadow: 0 0 50px rgba(0, 0, 0, 0.5); .cta-title { font-size: 2.5rem; margin-bottom: 1rem; color: #fff; } .cta-text { color: #94a3b8; max-width: 600px; margin: 0 auto 2rem; } .cta-btn { background-color: $teal; color: black; border: none; padding: 1rem 3rem; font-weight: 600; border-radius: 6px; cursor: pointer; &:hover { background-color: $teal-hover; } } }

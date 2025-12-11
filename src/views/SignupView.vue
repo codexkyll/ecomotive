@@ -1,12 +1,11 @@
 <template>
   <div class="auth-container">
     
-    <!-- Navbar sits inside the container, inheriting the 5% padding -->
     <Navbar />
 
     <div class="split-screen">
       
-      <!-- Left: Marketing / Value Prop -->
+
       <div class="left-panel animate-fade-in">
         <div class="brand-box">
           <h1>Join <br>EcoMotive</h1>
@@ -93,7 +92,7 @@ const email = ref('');
 const password = ref('');
 const confirmPassword = ref('');
 
-// Logic: If on Vercel (Production), use relative path. If local, use localhost:5000.
+
 const API_URL = import.meta.env.PROD 
   ? '/api/auth/signup' 
   : 'http://localhost:5000/api/auth/signup';
@@ -131,7 +130,6 @@ $bg-color: #050b14;
 $card-bg: #0f172a;
 $text-color: #e2e8f0;
 $border-color: #1e293b;
-
 $teal: #14b8a6;
 $teal-hover: #2dd4bf;
 
@@ -141,7 +139,6 @@ $teal-hover: #2dd4bf;
   color: $text-color;
   min-height: 100vh;
   font-family: 'Inter', sans-serif;
-  
   padding: 0 5%; 
   overflow-x: hidden;
 }
@@ -153,23 +150,33 @@ $teal-hover: #2dd4bf;
   max-width: 1200px;
   margin: 20px auto 60px;
   gap: 60px;
-  align-items: center;
+  align-items: center; /* This keeps the form centered vertically */
   min-height: calc(100vh - 160px);
 
   @media (max-width: 900px) {
     grid-template-columns: 1fr;
     gap: 40px;
     text-align: center;
-    .left-panel { display: flex; flex-direction: column; align-items: center; }
+    .left-panel { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      /* Reset the padding on mobile so there isn't a huge gap */
+      padding-bottom: 0; 
+    }
     .features ul { text-align: left; }
   }
 }
 
 /* --- Left Panel (Marketing) --- */
 .left-panel {
+  /* 
+     Adding padding-bottom here creates invisible space below the text.
+     Since the grid centers the element, this pushes the VISIBLE text upwards.
+  */
+  padding-bottom: 150px; 
+
   .brand-box { max-width: 500px; }
-  
-  /* REMOVED .leaf-icon CSS */
 
   h1 { font-size: 3.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 20px; color: white; }
   .description { color: #94a3b8; font-size: 1.1rem; line-height: 1.6; margin-bottom: 40px; }
@@ -196,7 +203,6 @@ $teal-hover: #2dd4bf;
   padding: 40px;
   border-radius: 20px;
   width: 100%;
-  // INCREASED MAX-WIDTH
   max-width: 500px; 
   border: 1px solid $border-color;
   box-shadow: 0 20px 40px rgba(0,0,0,0.4);
@@ -214,7 +220,6 @@ $teal-hover: #2dd4bf;
         width: 100%; 
         background: #020617; 
         border: 1px solid #334155;
-        // ADJUSTED PADDING to match height of original design
         padding: 14px 12px 14px 45px; 
         border-radius: 8px; 
         color: white; 
@@ -237,8 +242,6 @@ $teal-hover: #2dd4bf;
     background-color: $teal; color: black; border: none; margin-bottom: 15px;
     &:hover { background-color: $teal-hover; }
   }
-  
-  /* REMOVED .btn-google CSS */
 
   .divider {
     text-align: center; margin: 25px 0; border-top: 1px solid #334155; position: relative;
