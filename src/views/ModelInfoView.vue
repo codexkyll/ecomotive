@@ -311,7 +311,7 @@ $red: #ef4444;
     gap: 20px;
 
     .stat-item {
-      display: flex; flex-direction: column; gap: 5px;
+      display: flex; flex-direction: column; gap: 5px; align-items: center; text-align: center;
       .label { color: #94a3b8; font-size: 0.9rem; font-weight: 500; }
       .value { font-size: 2rem; font-weight: 800; color: white; }
       .value.highlight { color: #fff; } 
@@ -427,6 +427,7 @@ $red: #ef4444;
   .stat-separator { display: none; }
   .grid-2 { grid-template-columns: 1fr; }
   .data-list li { flex-direction: column; align-items: flex-start; gap: 5px; .data-value { text-align: left; } }
+  .stat-item { align-items: center;}
 }
 
 .animate-fade-in { animation: fadeIn 0.8s ease-out; }

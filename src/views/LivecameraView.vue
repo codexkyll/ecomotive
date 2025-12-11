@@ -38,8 +38,14 @@
               <span>Analyzing...</span>
             </div>
             
-            <!-- C. EXIT FULLSCREEN BUTTON -->
-            <button v-if="isFullscreen" @click="toggleFullscreen" class="exit-fullscreen-overlay-btn" title="Exit Fullscreen">
+            <!-- C. EXIT FULLSCREEN BUTTON (UPDATED) -->
+            <button 
+              v-if="isFullscreen" 
+              @click.stop="handleExitClick" 
+              @touchend.prevent.stop="handleExitClick"
+              class="exit-fullscreen-overlay-btn" 
+              title="Exit Fullscreen"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -278,11 +284,20 @@ onUnmounted(() => {
   document.removeEventListener('msfullscreenchange', handleFullscreenChange);
 });
 
+// Wrapper to log clicks specifically
+const handleExitClick = () => {
+  console.log("❌ Close button clicked/touched");
+  toggleFullscreen();
+};
+
 const handleFullscreenChange = () => {
+  // Logic for Native Fullscreen events
   if (document.fullscreenElement || document.webkitFullscreenElement) {
     isFullscreen.value = true;
     lockOrientation();
   } else {
+    // Only turn off if we were actually in native fullscreen. 
+    // This handler will NOT fire for CSS-fallback fullscreen.
     if (!isFullscreen.value) return; 
     isFullscreen.value = false;
     unlockOrientation();
@@ -364,8 +379,6 @@ const startCamera = async () => {
           width: { ideal: 1280 }, height: { ideal: 720 } 
         };
 
-    // On some browsers 'video' key wrapping is needed, on others top level is fine.
-    // Combining safe constraint object:
     const finalConstraints = {
       video: isMobileDevice.value 
         ? { facingMode: facingMode.value, width: { ideal: 720 }, height: { ideal: 1280 } }
@@ -421,24 +434,45 @@ const flipCamera = () => {
   startCamera(); 
 };
 
+// --- UPDATED TOGGLE FULLSCREEN LOGIC ---
 const toggleFullscreen = async () => {
+  console.log("Toggle Fullscreen triggered. Current state:", isFullscreen.value);
   const wrapper = videoWrapperRef.value;
   
   if (isFullscreen.value) {
-    if (document.exitFullscreen) await document.exitFullscreen().catch(() => {});
-    else if (document.webkitExitFullscreen) await document.webkitExitFullscreen().catch(() => {});
-    // State change handled by event listener
+    // === EXITING FULLSCREEN ===
+    
+    // 1. Check if we are in NATIVE fullscreen mode (Android/Desktop)
+    const isNativeFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+    
+    if (isNativeFullscreen) {
+      console.log("Attempting native exit...");
+      if (document.exitFullscreen) await document.exitFullscreen().catch(e => console.error("Native exit failed", e));
+      else if (document.webkitExitFullscreen) await document.webkitExitFullscreen().catch(e => console.error("Webkit exit failed", e));
+      // NOTE: We don't manually set isFullscreen = false here, 
+      // because the 'fullscreenchange' event listener will do it for us.
+    } else {
+      // 2. We are in CSS-Fallback mode (iOS or native failed)
+      console.log("Exiting CSS fallback mode...");
+      isFullscreen.value = false;
+      unlockOrientation();
+    }
     return;
   }
 
+  // === ENTERING FULLSCREEN ===
+  console.log("Entering fullscreen...");
   try {
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    
+    // Try native requests first (skip if iOS)
     if (!isIOS && wrapper.requestFullscreen) {
       await wrapper.requestFullscreen();
     } else if (!isIOS && wrapper.webkitRequestFullscreen) {
       await wrapper.webkitRequestFullscreen();
     } else {
       // Fallback (iOS mostly)
+      console.log("Using CSS fallback for enter");
       isFullscreen.value = true;
       lockOrientation();
     }
@@ -580,9 +614,6 @@ const renderPredictions = (predictions) => {
 
     const topLeftX = x - (width / 2);
     const topLeftY = y - (height / 2);
-    // Since the CSS flips the canvas, the "Right" side of the box in the internal data
-    // corresponds to the "Left" side of the box visually on screen.
-    // We use this 'rightEdgeX' to align the text text to the visual top-left corner.
     const rightEdgeX = topLeftX + width; 
 
     // 1. Segmentation
@@ -611,17 +642,12 @@ const renderPredictions = (predictions) => {
     ctx.strokeRect(topLeftX, topLeftY, width, height);
 
     // 3. Label Text
-    // Because CSS uses transform: scaleX(-1), standard text drawing would be mirrored.
-    // We must "un-mirror" the text context so it reads correctly.
     ctx.save();
     
-    // Translate to the Right Edge of the box (which is the Visual Left Edge due to CSS mirror)
     ctx.translate(rightEdgeX, topLeftY);
     
-    // Flip the coordinate system horizontally to counteract the CSS flip
     ctx.scale(-1, 1);
 
-    // Draw the text standard (Left to Right in this flipped context = Right to Left in Canvas = Left to Right Visually)
     const text = `${className} ${Math.round(confidence * 100)}%`;
     ctx.font = 'bold 14px Inter';
     const textWidth = ctx.measureText(text).width;
@@ -743,10 +769,27 @@ $orange: #f59e0b;
   .analyzing-badge { position: absolute; top: 20px; right: 20px; background: rgba(0, 0, 0, 0.7); color: #fff; padding: 8px 16px; border-radius: 20px; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 600; z-index: 20; border: 1px solid rgba(255, 255, 255, 0.1); .spinner { width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; } }
   
   .exit-fullscreen-overlay-btn {
-    position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.6); color: white; border: 1px solid rgba(255, 255, 255, 0.2);
-    width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    cursor: pointer; z-index: 1000; transition: all 0.2s;
+    position: absolute; 
+    bottom: 30px; 
+    left: 50%; 
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.6); 
+    color: white; 
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 50px; 
+    height: 50px; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    cursor: pointer; 
+    
+    /* Ensure button is always clickable on mobile */
+    z-index: 100001; 
+    pointer-events: auto;
+    touch-action: manipulation;
+    
+    transition: all 0.2s;
     &:hover { background: rgba(239, 68, 68, 0.8); border-color: transparent; }
     svg { width: 24px; height: 24px; }
   }
@@ -773,7 +816,12 @@ $orange: #f59e0b;
     }
   }
 
-  .exit-fullscreen-overlay-btn { position: fixed; bottom: 40px; }
+  /* Safe Area for iPhones */
+  .exit-fullscreen-overlay-btn { 
+    position: fixed; 
+    bottom: max(40px, env(safe-area-inset-bottom)); 
+    z-index: 2147483647;
+  }
 }
 
 :-webkit-full-screen .video-wrapper { width: 100vw; height: 100vh; aspect-ratio: unset; }
@@ -797,7 +845,12 @@ $orange: #f59e0b;
     }
   }
 
-  .exit-fullscreen-overlay-btn { position: fixed; bottom: 40px; }
+  /* Safe Area for iPhones */
+  .exit-fullscreen-overlay-btn { 
+    position: fixed; 
+    bottom: max(40px, env(safe-area-inset-bottom, 40px)); 
+    z-index: 100001; 
+  }
 }
 
 // ===================================
