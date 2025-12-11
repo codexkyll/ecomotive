@@ -261,7 +261,7 @@ const SAVE_COOLDOWN = 3000;
 
 // --- Lifecycle & Fullscreen Handlers ---
 onMounted(() => {
-  isMobileDevice.value = /Mobi|Android/i.test(navigator.userAgent);
+  isMobileDevice.value = /Mobi|Android|iPhone/i.test(navigator.userAgent);
 
   document.addEventListener('fullscreenchange', handleFullscreenChange);
   document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
@@ -271,6 +271,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   stopCamera();
+  if (isFullscreen.value) unlockOrientation();
   document.removeEventListener('fullscreenchange', handleFullscreenChange);
   document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
   document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
@@ -280,9 +281,27 @@ onUnmounted(() => {
 const handleFullscreenChange = () => {
   if (document.fullscreenElement || document.webkitFullscreenElement) {
     isFullscreen.value = true;
+    lockOrientation();
   } else {
     if (!isFullscreen.value) return; 
     isFullscreen.value = false;
+    unlockOrientation();
+  }
+};
+
+const lockOrientation = async () => {
+  if (isMobileDevice.value && screen.orientation && screen.orientation.lock) {
+    try {
+      await screen.orientation.lock('portrait');
+    } catch (e) {
+      console.log('Orientation lock not supported', e);
+    }
+  }
+};
+
+const unlockOrientation = () => {
+  if (screen.orientation && screen.orientation.unlock) {
+    screen.orientation.unlock();
   }
 };
 
@@ -334,11 +353,26 @@ const startCamera = async () => {
   try {
     statusText.value = 'Initializing...';
     
+    // UPDATED: Explicitly request Portrait dimensions on mobile (height > width)
     const constraints = isMobileDevice.value 
-      ? { facingMode: facingMode.value, width: { ideal: 720 }, height: { ideal: 1280 } }
-      : { facingMode: facingMode.value, width: { ideal: 1280 }, height: { ideal: 720 } };
+      ? { 
+          facingMode: facingMode.value, 
+          video: { width: { ideal: 720 }, height: { ideal: 1280 } } 
+        }
+      : { 
+          facingMode: facingMode.value, 
+          width: { ideal: 1280 }, height: { ideal: 720 } 
+        };
 
-    stream = await navigator.mediaDevices.getUserMedia({ video: constraints, audio: false });
+    // On some browsers 'video' key wrapping is needed, on others top level is fine.
+    // Combining safe constraint object:
+    const finalConstraints = {
+      video: isMobileDevice.value 
+        ? { facingMode: facingMode.value, width: { ideal: 720 }, height: { ideal: 1280 } }
+        : { facingMode: facingMode.value, width: { ideal: 1280 }, height: { ideal: 720 } }
+    };
+
+    stream = await navigator.mediaDevices.getUserMedia(finalConstraints);
     
     if (videoRef.value) {
       videoRef.value.srcObject = stream;
@@ -393,7 +427,7 @@ const toggleFullscreen = async () => {
   if (isFullscreen.value) {
     if (document.exitFullscreen) await document.exitFullscreen().catch(() => {});
     else if (document.webkitExitFullscreen) await document.webkitExitFullscreen().catch(() => {});
-    isFullscreen.value = false;
+    // State change handled by event listener
     return;
   }
 
@@ -404,11 +438,14 @@ const toggleFullscreen = async () => {
     } else if (!isIOS && wrapper.webkitRequestFullscreen) {
       await wrapper.webkitRequestFullscreen();
     } else {
+      // Fallback (iOS mostly)
       isFullscreen.value = true;
+      lockOrientation();
     }
   } catch (err) {
     console.log("Native fullscreen failed, using CSS fallback", err);
     isFullscreen.value = true;
+    lockOrientation();
   }
 };
 
@@ -658,7 +695,7 @@ $orange: #f59e0b;
 .video-wrapper {
   position: relative; 
   width: 100%; 
-  /* 'contain' + flex centering prevents mobile zooming issues */
+  /* Desktop Aspect Ratio */
   aspect-ratio: 16/9; 
   background-color: #000; 
   border-radius: 16px; 
@@ -669,28 +706,28 @@ $orange: #f59e0b;
   justify-content: center;
   align-items: center;
   
-  @media (max-width: 600px) {
-    aspect-ratio: 4/3; 
-    border-radius: 10px;
+  /* --- MOBILE PORTRAIT FIX --- */
+  @media (max-width: 768px) {
+    /* Changes container to be vertical on phones */
+    aspect-ratio: 9/16; 
+    border-radius: 12px;
   }
 
-  // --- START FIX: Mirrored Display + No Zoom ---
   .live-video, 
   .detection-canvas, 
   .uploaded-preview { 
     position: absolute; top: 0; left: 0; 
     width: 100%; height: 100%; 
     
-    // 'contain' fixes the mobile zoom issue
+    /* Ensure content fills the box comfortably */
     object-fit: contain; 
     
-    // 'scaleX(-1)' creates the mirrored effect you wanted
+    /* Mirrored effect */
     transform: scaleX(-1); 
   }
   
   .live-video.hidden { display: none; }
   .detection-canvas { pointer-events: none; }
-  // --- END FIX ---
 
   .camera-off-overlay { 
     position: absolute; inset: 0; 
@@ -722,14 +759,23 @@ $orange: #f59e0b;
   width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0; background: black;
   display: flex; justify-content: center; align-items: center;
   
-  // Ensure we maintain 'contain' to prevent zoom in fullscreen
   .live-video, .uploaded-preview, .detection-canvas { 
     width: 100%; height: 100%; 
+    /* Maintain aspect ratio but fit within screen */
     object-fit: contain !important;
     transform: scaleX(-1);
   }
+  
+  /* On mobile portrait fullscreen, we prefer coverage or slight fill */
+  @media (max-width: 768px) {
+    .live-video, .detection-canvas {
+        object-fit: cover !important; /* Forces it to fill vertical space */
+    }
+  }
+
   .exit-fullscreen-overlay-btn { position: fixed; bottom: 40px; }
 }
+
 :-webkit-full-screen .video-wrapper { width: 100vw; height: 100vh; aspect-ratio: unset; }
 
 // CSS FALLBACK Fullscreen
@@ -743,6 +789,14 @@ $orange: #f59e0b;
     object-fit: contain !important;
     transform: scaleX(-1);
   }
+  
+  /* Mobile Portrait adjustment for Fallback */
+  @media (max-width: 768px) {
+    .live-video, .detection-canvas {
+        object-fit: cover !important;
+    }
+  }
+
   .exit-fullscreen-overlay-btn { position: fixed; bottom: 40px; }
 }
 
