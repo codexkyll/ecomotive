@@ -21,7 +21,7 @@
           <div ref="videoWrapperRef" class="video-wrapper" :class="{ 'force-fullscreen': isFullscreen }">
             
             <!-- A. Camera OFF/Idle Overlay -->
-            <div v-if="!isStreaming" class="camera-off-overlay">
+            <div v-if="!isStreaming && !uploadedImage" class="camera-off-overlay">
               <div class="camera-off-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M12 4.5H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h12A2.25 2.25 0 0018 18V9.75M12 4.5v7.5M12 4.5h3.75" />
@@ -29,11 +29,11 @@
                 <div class="red-slash"></div>
               </div>
               <p class="title-text">Camera is off</p>
-              <p class="instruction-text">Grant permissions and click "Start Camera" to begin detection.</p>
+              <p class="instruction-text">Grant permissions and click "Start Camera" or Upload an Image.</p>
             </div>
 
             <!-- B. ANALYZING INDICATOR -->
-            <div v-if="isStreaming && isProcessing" class="analyzing-badge">
+            <div v-if="(isStreaming || uploadedImage) && isProcessing" class="analyzing-badge">
               <div class="spinner"></div>
               <span>Analyzing...</span>
             </div>
@@ -46,18 +46,27 @@
             </button>
             
             <!-- D. Live Video Element -->
-            <!-- FIXED: Removed 'mirrored' class binding to prevent inversion on Web -->
             <video 
+              v-show="!uploadedImage"
               ref="videoRef" 
               autoplay 
               playsinline 
               muted 
               class="live-video" 
-              :class="{ 'hidden': !isStreaming }"
+              :class="{ 'hidden': !isStreaming && !uploadedImage }"
             ></video>
+
+            <!-- E. Uploaded Image Element -->
+            <img 
+              v-if="uploadedImage" 
+              ref="uploadedImageRef" 
+              :src="uploadedImage" 
+              class="uploaded-preview" 
+              @load="onImageLoad"
+              alt="Uploaded detection" 
+            />
             
-            <!-- E. Canvas for Bounding Boxes -->
-            <!-- FIXED: Removed 'mirrored' class to ensure text is always readable -->
+            <!-- F. Canvas for Bounding Boxes -->
             <canvas ref="canvasRef" class="detection-canvas"></canvas>
           </div>
 
@@ -75,13 +84,29 @@
               <span>Flip</span>
             </button>
             
+            <!-- UPLOAD BUTTON -->
+            <button @click="triggerFileUpload" class="btn-secondary">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+              </svg>
+              <span>Upload</span>
+            </button>
+            <!-- Hidden File Input -->
+            <input 
+              type="file" 
+              ref="fileInput" 
+              accept="image/*" 
+              style="display: none" 
+              @change="handleFileUpload" 
+            />
+
             <!-- Clear -->
             <button @click="clearDetection" class="btn-secondary">
               ⟳ Clear
             </button>
 
             <!-- Fullscreen -->
-            <button v-if="isStreaming" @click="toggleFullscreen" class="btn-secondary" title="Enter Fullscreen">
+            <button v-if="isStreaming || uploadedImage" @click="toggleFullscreen" class="btn-secondary" title="Enter Fullscreen">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px; height:20px;">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9M20.25 20.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
               </svg>
@@ -104,8 +129,8 @@
               <span class="value text-gray">{{ statusText }}</span>
             </div>
             <div class="stat">
-              <span class="label">FPS</span>
-              <span class="value green">{{ currentFPS }}</span>
+              <span class="label">FPS/Mode</span>
+              <span class="value green">{{ isStreaming ? currentFPS : (uploadedImage ? 'Image' : '-') }}</span>
             </div>
           </div>
 
@@ -133,21 +158,21 @@
                 <div class="step-num">1</div>
                 <div class="step-text">
                   <strong>Authorize and Start</strong>
-                  <p>Log in first, grant camera permissions, and click "Start Camera" to activate live feed</p>
+                  <p>Log in first, then use "Start Camera" or "Upload" to begin.</p>
                 </div>
               </div>
               <div class="step">
                 <div class="step-num">2</div>
                 <div class="step-text">
-                  <strong>Live Detection & Analysis</strong>
-                  <p>Point the camera at an object. Watch as bounding boxes appear around detected objects</p>
+                  <strong>Detection & Analysis</strong>
+                  <p>Point the camera or upload a file. Watch as bounding boxes appear.</p>
                 </div>
               </div>
               <div class="step">
                 <div class="step-num">3</div>
                 <div class="step-text">
                   <strong>Save Performance Data</strong>
-                  <p>Detections are automatically logged to the backend</p>
+                  <p>Detections and average confidence are logged to the backend.</p>
                 </div>
               </div>
             </div>
@@ -155,7 +180,7 @@
 
           <div class="info-card system-card">
             <div class="system-header">
-              <span class="status-dot" :class="{'active': isStreaming}"></span> System Ready
+              <span class="status-dot" :class="{'active': isStreaming || uploadedImage}"></span> System Ready
             </div>
             <div class="system-details">
               <p>Model: <span>v11</span></p>
@@ -191,7 +216,7 @@
 </template>
 
 <script setup>
-import { ref, onUnmounted, onMounted } from 'vue';
+import { ref, onUnmounted, onMounted, nextTick } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import Navbar from '../components/navbar.vue'; 
@@ -211,7 +236,12 @@ const router = useRouter();
 const videoRef = ref(null);
 const videoWrapperRef = ref(null);
 const canvasRef = ref(null);
+const uploadedImageRef = ref(null);
+const fileInput = ref(null);
+
 const isStreaming = ref(false);
+const uploadedImage = ref(null);
+
 const detectionCount = ref(0);
 const avgConfidence = ref(0);
 const statusText = ref('Ready');
@@ -219,7 +249,7 @@ const currentFPS = ref(0);
 const isProcessing = ref(false);
 const showAuthModal = ref(false); 
 const isFullscreen = ref(false);
-const facingMode = ref('environment'); // default to back camera
+const facingMode = ref('environment'); 
 const isMobileDevice = ref(false);
 
 // Internal variables
@@ -251,50 +281,62 @@ const handleFullscreenChange = () => {
   if (document.fullscreenElement || document.webkitFullscreenElement) {
     isFullscreen.value = true;
   } else {
-    // Only turn off if we were depending on native fullscreen
     if (!isFullscreen.value) return; 
     isFullscreen.value = false;
   }
 };
 
 // --- Auth Navigation ---
-const closeAuthModal = () => {
-  showAuthModal.value = false;
+const closeAuthModal = () => { showAuthModal.value = false; };
+const goToLogin = () => { showAuthModal.value = false; router.push('/login'); };
+const goToSignup = () => { showAuthModal.value = false; router.push('/signup'); };
+
+// --- Upload Logic ---
+const triggerFileUpload = () => {
+  const token = localStorage.getItem('userToken');
+  if (!token) { showAuthModal.value = true; return; }
+  fileInput.value.click();
 };
 
-const goToLogin = () => {
-  showAuthModal.value = false;
-  router.push('/login');
+const handleFileUpload = (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (isStreaming.value) stopCamera();
+  clearDetection(false); 
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    uploadedImage.value = e.target.result;
+    statusText.value = 'Image Loaded';
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
 };
 
-const goToSignup = () => {
-  showAuthModal.value = false;
-  router.push('/signup');
+const onImageLoad = () => {
+  nextTick(() => {
+    if (uploadedImageRef.value && canvasRef.value) {
+      canvasRef.value.width = uploadedImageRef.value.naturalWidth;
+      canvasRef.value.height = uploadedImageRef.value.naturalHeight;
+      detectStaticImage();
+    }
+  });
 };
 
 // --- Camera Methods ---
 const startCamera = async () => {
   const token = localStorage.getItem('userToken');
-  if (!token) {
-    showAuthModal.value = true;
-    return;
-  }
+  if (!token) { showAuthModal.value = true; return; }
+
+  uploadedImage.value = null;
 
   try {
     statusText.value = 'Initializing...';
     
-    // Mobile: Portrait (720w x 1280h). Desktop: Landscape (1280w x 720h).
     const constraints = isMobileDevice.value 
-      ? { 
-          facingMode: facingMode.value, 
-          width: { ideal: 720 }, 
-          height: { ideal: 1280 } 
-        }
-      : { 
-          facingMode: facingMode.value, 
-          width: { ideal: 1280 }, 
-          height: { ideal: 720 } 
-        };
+      ? { facingMode: facingMode.value, width: { ideal: 720 }, height: { ideal: 1280 } }
+      : { facingMode: facingMode.value, width: { ideal: 1280 }, height: { ideal: 720 } };
 
     stream = await navigator.mediaDevices.getUserMedia({ video: constraints, audio: false });
     
@@ -310,7 +352,6 @@ const startCamera = async () => {
     }
   } catch (error) {
     console.error("Error accessing webcam:", error);
-    // Desktop fallback: If environment camera is not found, use default (user)
     if (error.name === "OverconstrainedError" && facingMode.value === 'environment') {
         facingMode.value = 'user'; 
         startCamera(); 
@@ -322,33 +363,25 @@ const startCamera = async () => {
 };
 
 const stopCamera = () => {
-  if (stream) {
-    stream.getTracks().forEach(track => track.stop());
-    stream = null;
-  }
-  if (intervalId) {
-    clearInterval(intervalId);
-    intervalId = null;
-  }
+  if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
+  if (intervalId) { clearInterval(intervalId); intervalId = null; }
   isStreaming.value = false;
   isProcessing.value = false;
-  statusText.value = 'Idle';
+  
+  statusText.value = uploadedImage.value ? 'Image Mode' : 'Idle';
   currentFPS.value = 0;
   
-  const ctx = canvasRef.value?.getContext('2d');
-  if (ctx) ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
-
-  if (isFullscreen.value) {
-    toggleFullscreen();
+  if (!uploadedImage.value) {
+    const ctx = canvasRef.value?.getContext('2d');
+    if (ctx) ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
   }
+
+  if (isFullscreen.value) toggleFullscreen();
 };
 
-const toggleCamera = () => {
-  if (isStreaming.value) stopCamera();
-  else startCamera();
-};
+const toggleCamera = () => { if (isStreaming.value) stopCamera(); else startCamera(); };
 
-const flipCamera = () => {
+const flipCamera = () => { 
   stopCamera(); 
   facingMode.value = facingMode.value === 'environment' ? 'user' : 'environment';
   startCamera(); 
@@ -371,7 +404,6 @@ const toggleFullscreen = async () => {
     } else if (!isIOS && wrapper.webkitRequestFullscreen) {
       await wrapper.webkitRequestFullscreen();
     } else {
-      // iOS / Mobile Fallback
       isFullscreen.value = true;
     }
   } catch (err) {
@@ -380,13 +412,24 @@ const toggleFullscreen = async () => {
   }
 };
 
-// --- Detection Loop ---
-const clearDetection = () => {
-  detectionCount.value = 0;
-  avgConfidence.value = 0;
-  const ctx = canvasRef.value?.getContext('2d');
-  if (ctx) ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
-};
+// --- Detection Logic ---
+
+const detectStaticImage = async () => {
+  if (!uploadedImage.value) return;
+  isProcessing.value = true;
+  statusText.value = 'Analyzing...';
+
+  try {
+    const base64Data = uploadedImage.value.split(',')[1];
+    await runInference(base64Data, true);
+    statusText.value = 'Complete';
+  } catch (err) {
+    console.error("Static Detection Error", err);
+    statusText.value = 'Error';
+  } finally {
+    isProcessing.value = false;
+  }
+}
 
 const captureAndDetect = async () => {
   if (!isStreaming.value || !videoRef.value || !canvasRef.value || isProcessing.value) return;
@@ -409,34 +452,7 @@ const captureAndDetect = async () => {
 
     const imageBase64 = tempCanvas.toDataURL('image/jpeg', 0.7).split(',')[1];
 
-    const response = await axios({
-      method: "POST",
-      url: MODEL_ENDPOINT,
-      params: { api_key: API_KEY, format: "json" },
-      data: imageBase64,
-      headers: { "Content-Type": "application/x-www-form-urlencoded" }
-    });
-
-    const predictions = response.data.predictions;
-
-    detectionCount.value = predictions.length;
-    if (predictions.length > 0) {
-      const totalConf = predictions.reduce((sum, p) => sum + p.confidence, 0);
-      avgConfidence.value = Math.round((totalConf / predictions.length) * 100);
-    } else {
-      avgConfidence.value = 0;
-    }
-
-    renderPredictions(predictions);
-
-    const currentTime = Date.now();
-    if (predictions.length > 0 && (currentTime - lastSaveTime > SAVE_COOLDOWN)) {
-      const bestPrediction = predictions.reduce((prev, current) => 
-        (prev.confidence > current.confidence) ? prev : current
-      );
-      await saveToHistory(bestPrediction);
-      lastSaveTime = currentTime;
-    }
+    await runInference(imageBase64, false);
 
   } catch (error) {
     console.warn("API Error:", error);
@@ -445,11 +461,44 @@ const captureAndDetect = async () => {
   }
 };
 
-const saveToHistory = async (prediction) => {
+const runInference = async (base64Data, forceSave = false) => {
+  const response = await axios({
+    method: "POST",
+    url: MODEL_ENDPOINT,
+    params: { api_key: API_KEY, format: "json" },
+    data: base64Data,
+    headers: { "Content-Type": "application/x-www-form-urlencoded" }
+  });
+
+  const predictions = response.data.predictions;
+
+  detectionCount.value = predictions.length;
+  if (predictions.length > 0) {
+    const totalConf = predictions.reduce((sum, p) => sum + p.confidence, 0);
+    avgConfidence.value = Math.round((totalConf / predictions.length) * 100);
+  } else {
+    avgConfidence.value = 0;
+  }
+
+  renderPredictions(predictions);
+
+  const currentTime = Date.now();
+  if (predictions.length > 0 && (forceSave || (currentTime - lastSaveTime > SAVE_COOLDOWN))) {
+    
+    const bestPrediction = predictions.reduce((prev, current) => 
+      (prev.confidence > current.confidence) ? prev : current
+    );
+
+    await saveToHistory(bestPrediction.class, avgConfidence.value);
+    lastSaveTime = currentTime;
+  }
+};
+
+const saveToHistory = async (className, averageConfidenceValue) => {
   try {
     const token = localStorage.getItem('userToken');
     if (!token) {
-        stopCamera();
+        if (isStreaming.value) stopCamera();
         showAuthModal.value = true;
         return;
     }
@@ -457,8 +506,8 @@ const saveToHistory = async (prediction) => {
     await axios.post(
       BACKEND_URL, 
       {
-        className: prediction.class,
-        confidence: (prediction.confidence * 100).toFixed(1)
+        className: className,
+        confidence: averageConfidenceValue.toFixed(1)
       },
       {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -467,7 +516,7 @@ const saveToHistory = async (prediction) => {
   } catch (err) {
     console.error("Backend Error:", err);
     if (err.response && err.response.status === 401) {
-        stopCamera();
+        if (isStreaming.value) stopCamera();
         localStorage.removeItem('userToken');
         showAuthModal.value = true;
     }
@@ -492,12 +541,14 @@ const renderPredictions = (predictions) => {
     if (c.includes('animal')) color = '#3b82f6'; 
     if (c.includes('vehicle')) color = '#f59e0b'; 
 
-    // FIX: Use standard coordinates directly. No complex flipping logic.
-    // This assumes the video is NOT inverted/mirrored via CSS.
     const topLeftX = x - (width / 2);
     const topLeftY = y - (height / 2);
+    // Since the CSS flips the canvas, the "Right" side of the box in the internal data
+    // corresponds to the "Left" side of the box visually on screen.
+    // We use this 'rightEdgeX' to align the text text to the visual top-left corner.
+    const rightEdgeX = topLeftX + width; 
 
-    // Segmentation
+    // 1. Segmentation
     if (prediction.points && prediction.points.length > 0) {
       ctx.beginPath();
       ctx.moveTo(prediction.points[0].x, prediction.points[0].y);
@@ -516,21 +567,51 @@ const renderPredictions = (predictions) => {
       ctx.stroke();
     }
 
-    // Box
+    // 2. Bounding Box
     ctx.globalAlpha = 1.0; 
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.strokeRect(topLeftX, topLeftY, width, height);
 
-    // Label
-    ctx.fillStyle = color;
+    // 3. Label Text
+    // Because CSS uses transform: scaleX(-1), standard text drawing would be mirrored.
+    // We must "un-mirror" the text context so it reads correctly.
+    ctx.save();
+    
+    // Translate to the Right Edge of the box (which is the Visual Left Edge due to CSS mirror)
+    ctx.translate(rightEdgeX, topLeftY);
+    
+    // Flip the coordinate system horizontally to counteract the CSS flip
+    ctx.scale(-1, 1);
+
+    // Draw the text standard (Left to Right in this flipped context = Right to Left in Canvas = Left to Right Visually)
     const text = `${className} ${Math.round(confidence * 100)}%`;
-    const textWidth = ctx.measureText(text).width;
-    ctx.fillRect(topLeftX, topLeftY - 25, textWidth + 10, 25);
-    ctx.fillStyle = '#000000';
     ctx.font = 'bold 14px Inter';
-    ctx.fillText(text, topLeftX + 5, topLeftY - 7);
+    const textWidth = ctx.measureText(text).width;
+    
+    // Background Rect
+    ctx.fillStyle = color;
+    ctx.fillRect(0, -25, textWidth + 10, 25);
+    
+    // Text
+    ctx.fillStyle = '#000000';
+    ctx.fillText(text, 5, -7);
+
+    ctx.restore();
   });
+};
+
+const clearDetection = (clearImage = true) => {
+  if (clearImage) {
+    uploadedImage.value = null;
+    if (fileInput.value) fileInput.value.value = '';
+  }
+  
+  detectionCount.value = 0;
+  avgConfidence.value = 0;
+  
+  const ctx = canvasRef.value?.getContext('2d');
+  if (ctx) ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
 };
 </script>
 
@@ -577,17 +658,39 @@ $orange: #f59e0b;
 .video-wrapper {
   position: relative; 
   width: 100%; 
+  /* 'contain' + flex centering prevents mobile zooming issues */
   aspect-ratio: 16/9; 
   background-color: #000; 
   border-radius: 16px; 
   overflow: hidden; 
   border: 1px solid #1e293b; 
   box-shadow: 0 0 40px rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   
   @media (max-width: 600px) {
     aspect-ratio: 4/3; 
     border-radius: 10px;
   }
+
+  // --- START FIX: Mirrored Display + No Zoom ---
+  .live-video, 
+  .detection-canvas, 
+  .uploaded-preview { 
+    position: absolute; top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    
+    // 'contain' fixes the mobile zoom issue
+    object-fit: contain; 
+    
+    // 'scaleX(-1)' creates the mirrored effect you wanted
+    transform: scaleX(-1); 
+  }
+  
+  .live-video.hidden { display: none; }
+  .detection-canvas { pointer-events: none; }
+  // --- END FIX ---
 
   .camera-off-overlay { 
     position: absolute; inset: 0; 
@@ -610,19 +713,6 @@ $orange: #f59e0b;
     &:hover { background: rgba(239, 68, 68, 0.8); border-color: transparent; }
     svg { width: 24px; height: 24px; }
   }
-
-  .live-video { 
-    width: 100%; height: 100%; 
-    object-fit: cover; 
-    /* REMOVED: transform: scaleX(-1); Video is now always 'True View' */
-    &.hidden { display: none; } 
-  }
-
-  .detection-canvas { 
-    position: absolute; top: 0; left: 0; 
-    width: 100%; height: 100%; 
-    pointer-events: none; 
-  }
 }
 
 // ===================================
@@ -630,7 +720,14 @@ $orange: #f59e0b;
 // ===================================
 .video-wrapper:fullscreen {
   width: 100vw; height: 100vh; aspect-ratio: unset; border-radius: 0; background: black;
-  .live-video, .detection-canvas { width: 100%; height: 100%; object-fit: cover; }
+  display: flex; justify-content: center; align-items: center;
+  
+  // Ensure we maintain 'contain' to prevent zoom in fullscreen
+  .live-video, .uploaded-preview, .detection-canvas { 
+    width: 100%; height: 100%; 
+    object-fit: contain !important;
+    transform: scaleX(-1);
+  }
   .exit-fullscreen-overlay-btn { position: fixed; bottom: 40px; }
 }
 :-webkit-full-screen .video-wrapper { width: 100vw; height: 100vh; aspect-ratio: unset; }
@@ -639,7 +736,13 @@ $orange: #f59e0b;
 .video-wrapper.force-fullscreen {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   z-index: 99999; background: #000; border-radius: 0; aspect-ratio: unset; margin: 0;
-  .live-video, .detection-canvas { width: 100%; height: 100%; object-fit: cover; }
+  display: flex; justify-content: center; align-items: center;
+  
+  .live-video, .uploaded-preview, .detection-canvas { 
+    width: 100%; height: 100%; 
+    object-fit: contain !important;
+    transform: scaleX(-1);
+  }
   .exit-fullscreen-overlay-btn { position: fixed; bottom: 40px; }
 }
 
@@ -690,7 +793,9 @@ $orange: #f59e0b;
   } 
 }
 
-// ... (Right column and modal styles unchanged) ...
+// ===================================
+// RIGHT COLUMN & MODAL
+// ===================================
 .right-column { display: flex; flex-direction: column; gap: 20px; }
 .info-card { background-color: $card-bg; border-radius: 12px; padding: 20px; border: 1px solid #1e293b; }
 .tips-card { border: 1px solid rgba($teal, 0.3); background: linear-gradient(180deg, rgba($teal, 0.05) 0%, $card-bg 100%); .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; .icon-info { color: $teal; font-weight: bold; border: 1px solid $teal; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; } h3 { font-size: 1.1rem; color: white; margin: 0; } } ul { padding-left: 20px; color: #cbd5e1; li { margin-bottom: 8px; font-size: 0.9rem; } } }
